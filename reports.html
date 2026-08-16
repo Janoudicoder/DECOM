@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediScan — Reports</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{sidebar:'#0f172a'}}}}</script>
+</head>
+<body class="flex min-h-screen bg-gray-50">
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="w-60 flex-shrink-0 bg-slate-900 flex flex-col min-h-screen">
+  <div class="p-5 border-b border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div>
+        <p class="text-white font-bold text-base leading-none">MediScan</p>
+        <p class="text-slate-400 text-xs mt-0.5">Radiology Center</p>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 py-4 px-3 space-y-0.5">
+    <p class="text-xs font-semibold text-slate-500 px-3 mb-2 uppercase tracking-widest">Main Menu</p>
+    <a href="dashboard.html"       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#127968; <span>Dashboard</span></a>
+    <a href="patients.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128101; <span>Patients</span></a>
+    <a href="appointments.html"    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128197; <span>Appointments</span></a>
+    <a href="new-examination.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128302; <span>Examinations</span></a>
+    <a href="reports.html"         class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium">&#128203; <span>Reports</span></a>
+    <a href="payments.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128179; <span>Payments</span></a>
+    <a href="doctors.html"         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128104;&#8205;&#9877;&#65039; <span>Doctors</span></a>
+    <a href="settings.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#9881;&#65039; <span>Settings</span></a>
+  </nav>
+  <div class="p-3 border-t border-slate-700 space-y-2">
+    <a href="patient-portal.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-teal-900 text-teal-300 hover:bg-teal-800 text-sm font-medium transition">&#128279; <span>Patient Portal</span></a>
+    <div class="flex items-center gap-3 px-2 py-2">
+      <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">SM</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-xs font-semibold leading-none">Dr. Sarah Miller</p>
+        <p class="text-slate-400 text-xs mt-0.5">Radiologist</p>
+      </div>
+      <a href="login.html" class="text-slate-500 hover:text-red-400 transition text-xs" title="Logout">&#10132;</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="flex-1 overflow-auto p-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Reports</h2>
+    <p class="text-gray-500 text-sm mt-1">Manage radiology reports</p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-5">
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-5">
+      <button id="tab-pending" onclick="switchTab('pending')"
+              class="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white transition">
+        Pending (6)
+      </button>
+      <button id="tab-completed" onclick="switchTab('completed')"
+              class="px-5 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+        Completed (8)
+      </button>
+    </div>
+
+    <!-- Pending Tab -->
+    <div id="section-pending">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b-2 border-gray-100">
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Patient</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Examination</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Doctor</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Date</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Status</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Sara Johnson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">CT Chest</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Robert Chen</td>
+            <td class="py-3 px-3 text-sm text-gray-600">16/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Sara Johnson','CT Chest','16/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Khalid Al-Mansouri</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Knee</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Aisha Patel</td>
+            <td class="py-3 px-3 text-sm text-gray-600">16/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Khalid Al-Mansouri','MRI Knee','16/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Omar Hassan</td>
+            <td class="py-3 px-3 text-sm text-gray-600">CT Brain</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. James Wilson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">15/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Urgent</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Omar Hassan','CT Brain','15/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Fatima Al-Zahra</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Brain</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Sarah Miller</td>
+            <td class="py-3 px-3 text-sm text-gray-600">15/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Fatima Al-Zahra','MRI Brain','15/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Noor Al-Said</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Spine</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Aisha Patel</td>
+            <td class="py-3 px-3 text-sm text-gray-600">14/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Noor Al-Said','MRI Spine','14/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Emily Chen</td>
+            <td class="py-3 px-3 text-sm text-gray-600">X-Ray Chest</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Robert Chen</td>
+            <td class="py-3 px-3 text-sm text-gray-600">14/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Pending</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Emily Chen','X-Ray Chest','14/08/2026')" class="border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-lg transition">View / Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Completed Tab -->
+    <div id="section-completed" class="hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b-2 border-gray-100">
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Patient</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Examination</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Doctor</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Date</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Status</th>
+            <th class="text-left py-2 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Ahmed Al-Rashid</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Brain</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Sarah Miller</td>
+            <td class="py-3 px-3 text-sm text-gray-600">16/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Ahmed Al-Rashid','MRI Brain','16/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Mohammed Al-Farsi</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Spine</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. James Wilson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">15/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Mohammed Al-Farsi','MRI Spine','15/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Laura Martinez</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Abdomen</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Aisha Patel</td>
+            <td class="py-3 px-3 text-sm text-gray-600">13/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Laura Martinez','MRI Abdomen','13/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">David Thompson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">CT Knee</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. James Wilson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">12/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('David Thompson','CT Knee','12/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Khalid Al-Mansouri</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Knee</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Aisha Patel</td>
+            <td class="py-3 px-3 text-sm text-gray-600">10/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Khalid Al-Mansouri','MRI Knee','10/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Sara Johnson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">MRI Brain</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Sarah Miller</td>
+            <td class="py-3 px-3 text-sm text-gray-600">08/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Sara Johnson','MRI Brain','08/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="border-b border-gray-50 hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Omar Hassan</td>
+            <td class="py-3 px-3 text-sm text-gray-600">CT Chest</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. Robert Chen</td>
+            <td class="py-3 px-3 text-sm text-gray-600">05/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Omar Hassan','CT Chest','05/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+          <tr class="hover:bg-gray-50">
+            <td class="py-3 px-3 text-sm font-semibold text-gray-800">Noor Al-Said</td>
+            <td class="py-3 px-3 text-sm text-gray-600">X-Ray Spine</td>
+            <td class="py-3 px-3 text-sm text-gray-600">Dr. James Wilson</td>
+            <td class="py-3 px-3 text-sm text-gray-600">01/08/2026</td>
+            <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span></td>
+            <td class="py-3 px-3"><button onclick="openReportModal('Noor Al-Said','X-Ray Spine','01/08/2026')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">View Report</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ===== REPORT MODAL ===== -->
+<div id="report-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-screen overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 bg-slate-900 rounded-t-2xl">
+      <div>
+        <h3 class="text-lg font-bold text-white">&#128196; Radiology Report</h3>
+        <p id="modal-subtitle" class="text-xs text-gray-400 mt-0.5">MRI Brain · Ahmed Al-Rashid · 16/08/2026</p>
+      </div>
+      <div class="flex gap-2 items-center">
+        <button class="bg-slate-700 hover:bg-slate-600 text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition">&#128424; Print</button>
+        <button class="bg-slate-700 hover:bg-slate-600 text-gray-300 text-xs font-semibold px-3 py-1.5 rounded-lg transition">&#11015; PDF</button>
+        <button onclick="closeReportModal()" class="text-gray-400 hover:text-white ml-2 text-xl">&times;</button>
+      </div>
+    </div>
+    <div class="p-6 bg-gray-50 text-sm font-sans">
+      <div class="text-center mb-6 pb-4 border-b border-gray-200">
+        <p class="text-xl font-bold text-gray-800">MediScan Radiology &amp; MRI Center</p>
+        <p class="text-sm text-gray-500">123 Medical District, Dubai, UAE | +971 4 123 4567</p>
+        <p class="text-sm text-gray-500">License: DHA-RAD-2024-0012</p>
+      </div>
+      <div id="modal-patient-info" class="grid grid-cols-2 gap-4 mb-5 text-xs">
+        <div class="space-y-1">
+          <p><strong>Patient:</strong> Ahmed Al-Rashid</p>
+          <p><strong>ID:</strong> P-001</p>
+          <p><strong>DOB:</strong> 15/03/1985</p>
+          <p><strong>Sex:</strong> Male</p>
+        </div>
+        <div class="space-y-1">
+          <p><strong>Study Date:</strong> 16/08/2026</p>
+          <p><strong>Accession:</strong> MS-2026-08-0042</p>
+          <p><strong>Modality:</strong> MRI Brain</p>
+          <p><strong>Referring:</strong> Dr. Sarah Miller</p>
+        </div>
+      </div>
+      <div class="space-y-4 leading-relaxed">
+        <div>
+          <p class="font-bold text-gray-700 border-b border-dashed border-gray-300 pb-1 mb-2 text-xs uppercase tracking-wider">Clinical Indication</p>
+          <p class="text-gray-600">Persistent headaches, visual disturbances. Rule out space-occupying lesion.</p>
+        </div>
+        <div>
+          <p class="font-bold text-gray-700 border-b border-dashed border-gray-300 pb-1 mb-2 text-xs uppercase tracking-wider">Technique</p>
+          <p class="text-gray-600">MRI brain performed using a 3T system. Sequences: axial T1W, axial T2W FLAIR, coronal T2W, sagittal T1W, and post-gadolinium T1W.</p>
+        </div>
+        <div>
+          <p class="font-bold text-gray-700 border-b border-dashed border-gray-300 pb-1 mb-2 text-xs uppercase tracking-wider">Findings</p>
+          <p class="text-gray-600"><strong>Brain parenchyma:</strong> Normal gray-white matter differentiation. No focal signal abnormality identified.</p>
+          <p class="text-gray-600 mt-1"><strong>Ventricles:</strong> Normal size and configuration. No hydrocephalus.</p>
+          <p class="text-gray-600 mt-1"><strong>Midline structures:</strong> No shift. Corpus callosum intact.</p>
+          <p class="text-gray-600 mt-1"><strong>Posterior fossa:</strong> Cerebellum and brainstem unremarkable. Fourth ventricle normal.</p>
+          <p class="text-gray-600 mt-1"><strong>Post-contrast:</strong> No abnormal enhancement identified.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-green-50 border-l-4 border-green-500">
+          <p class="font-bold text-green-800 text-xs uppercase tracking-wider mb-1">Impression</p>
+          <p class="text-green-700">Normal MRI brain. No evidence of acute infarction, space-occupying lesion, or abnormal enhancement. Clinical correlation recommended.</p>
+        </div>
+        <div class="pt-4 border-t flex justify-between items-end">
+          <div>
+            <p class="text-sm font-bold text-gray-800">Dr. Sarah Miller, MD</p>
+            <p class="text-xs text-gray-500">Consultant Radiologist — Neuroradiology</p>
+            <p class="text-xs text-gray-500">DHA License: DHA-00-0012345</p>
+          </div>
+          <div class="text-right text-xs text-gray-400">
+            <p>Signed: 16/08/2026 14:32</p>
+            <p>Report ID: RPT-2026-0842</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('section-pending').classList.toggle('hidden', tab !== 'pending');
+  document.getElementById('section-completed').classList.toggle('hidden', tab !== 'completed');
+  document.getElementById('tab-pending').className = tab === 'pending'
+    ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white transition'
+    : 'px-5 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition';
+  document.getElementById('tab-completed').className = tab === 'completed'
+    ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white transition'
+    : 'px-5 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition';
+}
+
+function openReportModal(patient, exam, date) {
+  document.getElementById('modal-subtitle').textContent = `${exam} · ${patient} · ${date}`;
+  document.getElementById('report-modal').classList.remove('hidden');
+}
+
+function closeReportModal() {
+  document.getElementById('report-modal').classList.add('hidden');
+}
+
+document.getElementById('report-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeReportModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeReportModal();
+});
+</script>
+</body>
+</html>

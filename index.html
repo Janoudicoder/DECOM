@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediScan - Radiology & MRI Center</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root { --primary: #2563eb; --teal: #0891b2; --sidebar: #1e2a3a; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; }
+  .sidebar { background: #1e2a3a; min-height: 100vh; width: 240px; flex-shrink: 0; }
+  .sidebar-link { display:flex; align-items:center; gap:10px; padding:10px 16px; color:#94a3b8; border-radius:8px; margin:2px 8px; cursor:pointer; transition:all .2s; font-size:14px; }
+  .sidebar-link:hover { background:#2d3f55; color:#fff; }
+  .sidebar-link.active { background:#2563eb; color:#fff; }
+  .sidebar-link i { width:18px; text-align:center; }
+  .page { display:none; }
+  .page.active { display:block; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .badge { display:inline-flex; align-items:center; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+  .badge-green { background:#dcfce7; color:#16a34a; }
+  .badge-yellow { background:#fef9c3; color:#ca8a04; }
+  .badge-red { background:#fee2e2; color:#dc2626; }
+  .badge-blue { background:#dbeafe; color:#2563eb; }
+  .badge-gray { background:#f1f5f9; color:#64748b; }
+  .stat-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .btn-primary { background:#2563eb; color:#fff; padding:8px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:background .2s; }
+  .btn-primary:hover { background:#1d4ed8; }
+  .btn-teal { background:#0891b2; color:#fff; padding:8px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; border:none; }
+  .btn-outline { background:#fff; color:#2563eb; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid #2563eb; }
+  .btn-sm { padding:5px 12px; font-size:12px; border-radius:6px; }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:#fff; border-radius:14px; max-width:680px; width:95%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  input, select, textarea { border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:14px; width:100%; outline:none; transition:border .2s; background:#fff; }
+  input:focus, select:focus, textarea:focus { border-color:#2563eb; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; padding:10px 14px; font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #f1f5f9; }
+  td { padding:12px 14px; font-size:13.5px; color:#374151; border-bottom:1px solid #f8fafc; }
+  tr:hover td { background:#f8fafc; }
+  .toast { position:fixed; bottom:28px; right:28px; background:#1e2a3a; color:#fff; padding:14px 22px; border-radius:10px; z-index:9999; font-size:14px; box-shadow:0 8px 30px rgba(0,0,0,.2); transform:translateY(100px); opacity:0; transition:all .4s; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  #mri-viewer-page { display:none; }
+  #mri-viewer-page.active { display:flex; flex-direction:column; }
+  .mri-thumb { cursor:pointer; border:2px solid transparent; border-radius:4px; transition:border .15s; }
+  .mri-thumb.selected { border-color:#0891b2; }
+  .tab-btn { padding:8px 20px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; border:none; background:#f1f5f9; color:#64748b; transition:all .2s; }
+  .tab-btn.active { background:#2563eb; color:#fff; }
+  .appt-block { border-radius:6px; padding:4px 8px; font-size:11px; font-weight:600; margin-bottom:3px; }
+  .week-cell { border:1px solid #e2e8f0; min-height:80px; vertical-align:top; padding:4px; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:#f1f5f9; }
+  ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ========== TOAST ========== -->
+<div id="toast" class="toast"></div>
+
+<!-- ========== LOGIN PAGE ========== -->
+<div id="login-page" class="page active min-h-screen flex items-center justify-center" style="background:linear-gradient(135deg,#1e2a3a 0%,#1a3a5c 100%)">
+  <div class="card p-10 w-full max-w-md mx-4">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style="background:linear-gradient(135deg,#2563eb,#0891b2)">
+        <i class="fa-solid fa-brain text-white text-2xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-800">MediScan</h1>
+      <p class="text-gray-500 mt-1 text-sm">Radiology & MRI Center Management</p>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+        <input id="login-email" type="email" value="demo@mediscan.com" placeholder="demo@mediscan.com">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+        <input id="login-pass" type="password" value="demo123" placeholder="••••••••">
+      </div>
+      <button onclick="doLogin()" class="btn-primary w-full py-3 text-base mt-2">
+        <i class="fa-solid fa-right-to-bracket mr-2"></i>Login
+      </button>
+    </div>
+    <div class="mt-6 p-4 rounded-lg" style="background:#f0f9ff;border:1px solid #bae6fd">
+      <p class="text-xs font-semibold text-blue-600 mb-1"><i class="fa-solid fa-circle-info mr-1"></i>Demo Credentials</p>
+      <p class="text-xs text-blue-700">Email: demo@mediscan.com</p>
+      <p class="text-xs text-blue-700">Password: demo123</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PORTAL LOGIN PAGE ========== -->
+<div id="portal-login-page" class="page min-h-screen flex items-center justify-center" style="background:linear-gradient(135deg,#064e3b 0%,#0891b2 100%)">
+  <div class="card p-10 w-full max-w-md mx-4">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style="background:linear-gradient(135deg,#059669,#0891b2)">
+        <i class="fa-solid fa-user-shield text-white text-2xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-800">Patient Portal</h1>
+      <p class="text-gray-500 mt-1 text-sm">Access your medical records securely</p>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Patient ID or Email</label>
+        <input type="text" value="ahmed@email.com" placeholder="patient@email.com">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Password / Date of Birth</label>
+        <input type="password" value="12345" placeholder="••••••••">
+      </div>
+      <button onclick="showPage('portal-dashboard')" class="w-full py-3 text-base font-bold text-white rounded-lg" style="background:linear-gradient(135deg,#059669,#0891b2);border:none;cursor:pointer;">
+        <i class="fa-solid fa-right-to-bracket mr-2"></i>Access Portal
+      </button>
+      <button onclick="showPage('login')" class="w-full py-2 text-sm text-gray-500 underline cursor-pointer bg-transparent border-none">
+        Staff Login →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN APP LAYOUT ========== -->
+<div id="app-layout" class="hidden flex min-h-screen">
+  <!-- Sidebar -->
+  <div class="sidebar flex flex-col">
+    <div class="p-5 border-b border-white border-opacity-10">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#2563eb,#0891b2)">
+          <i class="fa-solid fa-brain text-white text-sm"></i>
+        </div>
+        <div>
+          <p class="text-white font-bold text-lg leading-none">MediScan</p>
+          <p class="text-xs" style="color:#64748b">Radiology Center</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 py-4 overflow-y-auto">
+      <p class="text-xs font-semibold px-6 mb-2" style="color:#475569;letter-spacing:.8px">MAIN MENU</p>
+      <div class="sidebar-link active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('patients')" id="nav-patients">
+        <i class="fa-solid fa-users"></i><span>Patients</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('appointments')" id="nav-appointments">
+        <i class="fa-solid fa-calendar-days"></i><span>Appointments</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('examinations')" id="nav-examinations">
+        <i class="fa-solid fa-x-ray"></i><span>Examinations</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('reports')" id="nav-reports">
+        <i class="fa-solid fa-file-medical"></i><span>Reports</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('payments')" id="nav-payments">
+        <i class="fa-solid fa-credit-card"></i><span>Payments</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('doctors')" id="nav-doctors">
+        <i class="fa-solid fa-user-doctor"></i><span>Doctors</span>
+      </div>
+      <div class="sidebar-link" onclick="showPage('settings')" id="nav-settings">
+        <i class="fa-solid fa-gear"></i><span>Settings</span>
+      </div>
+    </nav>
+    <div class="p-4 border-t border-white border-opacity-10">
+      <div class="sidebar-link mb-2" onclick="showPage('portal-login')" style="background:#0c3547;color:#38bdf8">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i><span>Patient Portal</span>
+      </div>
+      <div class="flex items-center gap-3 px-2 py-2">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style="background:#2563eb">DR</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-sm font-semibold leading-none">Dr. Sarah Miller</p>
+          <p class="text-xs mt-0.5" style="color:#64748b">Radiologist</p>
+        </div>
+        <button onclick="doLogout()" class="text-gray-500 hover:text-red-400 transition-colors" title="Logout">
+          <i class="fa-solid fa-right-from-bracket text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-auto" style="background:#f0f4f8">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active p-6">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+        <p class="text-gray-500 text-sm mt-1"><i class="fa-regular fa-calendar mr-1"></i>Sunday, August 16, 2026</p>
+      </div>
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#dbeafe"><i class="fa-solid fa-users text-blue-600 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">24</p><p class="text-sm text-gray-500">Patients Today</p></div>
+        </div>
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#e0f2fe"><i class="fa-solid fa-magnet text-cyan-600 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">12</p><p class="text-sm text-gray-500">MRI Exams</p></div>
+        </div>
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#fef3c7"><i class="fa-solid fa-radiation text-amber-600 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">8</p><p class="text-sm text-gray-500">CT Exams</p></div>
+        </div>
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#dcfce7"><i class="fa-solid fa-circle-check text-green-600 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">18</p><p class="text-sm text-gray-500">Completed</p></div>
+        </div>
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#fee2e2"><i class="fa-solid fa-clock text-red-500 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">6</p><p class="text-sm text-gray-500">Pending Reports</p></div>
+        </div>
+        <div class="stat-card flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#f3e8ff"><i class="fa-solid fa-dollar-sign text-purple-600 text-lg"></i></div>
+          <div><p class="text-2xl font-bold text-gray-800">$4,850</p><p class="text-sm text-gray-500">Today's Revenue</p></div>
+        </div>
+      </div>
+      <!-- Recent Patients + Appointments -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800">Recent Patients</h3>
+            <button onclick="showPage('patients')" class="text-blue-600 text-sm font-semibold hover:underline">View All</button>
+          </div>
+          <table>
+            <thead><tr><th>Patient</th><th>Type</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><div class="font-semibold text-gray-800">Ahmed Al-Rashid</div><div class="text-xs text-gray-400">P-001</div></td><td>MRI Brain</td><td><span class="badge badge-green">Completed</span></td></tr>
+              <tr><td><div class="font-semibold text-gray-800">Sara Johnson</div><div class="text-xs text-gray-400">P-002</div></td><td>CT Chest</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+              <tr><td><div class="font-semibold text-gray-800">Mohammed Al-Farsi</div><div class="text-xs text-gray-400">P-003</div></td><td>MRI Spine</td><td><span class="badge badge-green">Completed</span></td></tr>
+              <tr><td><div class="font-semibold text-gray-800">Emily Chen</div><div class="text-xs text-gray-400">P-004</div></td><td>X-Ray Chest</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+              <tr><td><div class="font-semibold text-gray-800">Khalid Al-Mansouri</div><div class="text-xs text-gray-400">P-005</div></td><td>MRI Knee</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-800">Upcoming Appointments</h3>
+            <button onclick="showPage('appointments')" class="text-blue-600 text-sm font-semibold hover:underline">View All</button>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#f8fafc">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:#2563eb">09:00</div>
+              <div class="flex-1"><p class="font-semibold text-gray-800 text-sm">Laura Martinez</p><p class="text-xs text-gray-400">MRI Abdomen · Room 2</p></div>
+              <span class="badge badge-blue">Scheduled</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#f8fafc">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:#0891b2">10:30</div>
+              <div class="flex-1"><p class="font-semibold text-gray-800 text-sm">Omar Hassan</p><p class="text-xs text-gray-400">CT Brain · Room 1</p></div>
+              <span class="badge badge-blue">Scheduled</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#f8fafc">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:#7c3aed">11:00</div>
+              <div class="flex-1"><p class="font-semibold text-gray-800 text-sm">Fatima Al-Zahra</p><p class="text-xs text-gray-400">MRI Brain · Room 3</p></div>
+              <span class="badge badge-yellow">Pending</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#f8fafc">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:#059669">13:00</div>
+              <div class="flex-1"><p class="font-semibold text-gray-800 text-sm">David Thompson</p><p class="text-xs text-gray-400">X-Ray Knee · Room 4</p></div>
+              <span class="badge badge-green">Confirmed</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background:#f8fafc">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background:#dc2626">14:30</div>
+              <div class="flex-1"><p class="font-semibold text-gray-800 text-sm">Noor Al-Said</p><p class="text-xs text-gray-400">MRI Spine · Room 2</p></div>
+              <span class="badge badge-red">Urgent</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENTS LIST -->
+    <div id="page-patients" class="page p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div><h2 class="text-2xl font-bold text-gray-800">Patients</h2><p class="text-gray-500 text-sm mt-1">Manage patient records</p></div>
+        <button onclick="openModal('add-patient-modal')" class="btn-primary"><i class="fa-solid fa-plus mr-2"></i>Add New Patient</button>
+      </div>
+      <div class="card p-5">
+        <div class="flex gap-3 mb-5">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text" placeholder="Search patients by name, ID, phone..." class="pl-9" oninput="filterPatients(this.value)">
+          </div>
+          <select class="w-40"><option>All Gender</option><option>Male</option><option>Female</option></select>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="patients-table">
+            <thead><tr><th>Patient ID</th><th>Full Name</th><th>Phone</th><th>DOB</th><th>Gender</th><th>Referring Doctor</th><th>Action</th></tr></thead>
+            <tbody id="patients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT PROFILE -->
+    <div id="page-patient-profile" class="page p-6">
+      <div class="flex items-center gap-3 mb-6">
+        <button onclick="showPage('patients')" class="text-gray-500 hover:text-gray-700"><i class="fa-solid fa-arrow-left mr-1"></i>Back</button>
+        <h2 class="text-2xl font-bold text-gray-800">Patient Profile</h2>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Info Card -->
+        <div class="card p-6">
+          <div class="text-center mb-5">
+            <div class="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3" style="background:linear-gradient(135deg,#2563eb,#0891b2)">AR</div>
+            <h3 class="text-xl font-bold text-gray-800">Ahmed Al-Rashid</h3>
+            <p class="text-sm text-gray-400 font-semibold mt-1">P-001</p>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500">Date of Birth</span><span class="font-semibold">15 Mar 1985</span></div>
+            <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500">Gender</span><span class="font-semibold">Male</span></div>
+            <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500">Phone</span><span class="font-semibold">+971 50 123 4567</span></div>
+            <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500">Email</span><span class="font-semibold text-xs">ahmed@email.com</span></div>
+            <div class="flex justify-between py-2 border-b border-gray-100"><span class="text-gray-500">Ref. Doctor</span><span class="font-semibold">Dr. James Wilson</span></div>
+            <div class="py-2"><span class="text-gray-500 block mb-1">Medical Notes</span><p class="text-gray-700 text-xs leading-relaxed">Hypertension, controlled. No known allergies. Previous MRI in 2024.</p></div>
+          </div>
+          <!-- QR Code SVG -->
+          <div class="mt-5 text-center">
+            <p class="text-xs text-gray-400 mb-2">Patient QR Code</p>
+            <svg width="100" height="100" viewBox="0 0 100 100" class="mx-auto border p-1 rounded-lg">
+              <!-- QR pattern simulation -->
+              <rect width="100" height="100" fill="white"/>
+              <!-- Top-left finder -->
+              <rect x="5" y="5" width="25" height="25" fill="black"/><rect x="8" y="8" width="19" height="19" fill="white"/><rect x="11" y="11" width="13" height="13" fill="black"/>
+              <!-- Top-right finder -->
+              <rect x="70" y="5" width="25" height="25" fill="black"/><rect x="73" y="8" width="19" height="19" fill="white"/><rect x="76" y="11" width="13" height="13" fill="black"/>
+              <!-- Bottom-left finder -->
+              <rect x="5" y="70" width="25" height="25" fill="black"/><rect x="8" y="73" width="19" height="19" fill="white"/><rect x="11" y="76" width="13" height="13" fill="black"/>
+              <!-- Data modules -->
+              <rect x="35" y="5" width="5" height="5" fill="black"/><rect x="45" y="5" width="5" height="5" fill="black"/><rect x="55" y="5" width="5" height="5" fill="black"/>
+              <rect x="35" y="15" width="5" height="5" fill="black"/><rect x="55" y="15" width="5" height="5" fill="black"/>
+              <rect x="40" y="20" width="5" height="5" fill="black"/><rect x="50" y="10" width="5" height="5" fill="black"/>
+              <rect x="35" y="35" width="5" height="5" fill="black"/><rect x="45" y="35" width="5" height="5" fill="black"/><rect x="60" y="35" width="5" height="5" fill="black"/>
+              <rect x="5" y="35" width="5" height="5" fill="black"/><rect x="15" y="40" width="5" height="5" fill="black"/><rect x="25" y="35" width="5" height="5" fill="black"/>
+              <rect x="35" y="45" width="5" height="5" fill="black"/><rect x="50" y="45" width="5" height="5" fill="black"/><rect x="65" y="45" width="5" height="5" fill="black"/>
+              <rect x="5" y="45" width="5" height="5" fill="black"/><rect x="20" y="50" width="5" height="5" fill="black"/>
+              <rect x="35" y="55" width="5" height="5" fill="black"/><rect x="45" y="55" width="5" height="5" fill="black"/><rect x="60" y="55" width="5" height="5" fill="black"/>
+              <rect x="40" y="60" width="5" height="5" fill="black"/><rect x="55" y="60" width="5" height="5" fill="black"/><rect x="70" y="60" width="5" height="5" fill="black"/>
+              <rect x="80" y="35" width="5" height="5" fill="black"/><rect x="90" y="40" width="5" height="5" fill="black"/><rect x="80" y="45" width="5" height="5" fill="black"/>
+              <rect x="90" y="55" width="5" height="5" fill="black"/><rect x="80" y="60" width="5" height="5" fill="black"/>
+              <rect x="40" y="70" width="5" height="5" fill="black"/><rect x="55" y="70" width="5" height="5" fill="black"/><rect x="70" y="75" width="5" height="5" fill="black"/>
+              <rect x="40" y="80" width="5" height="5" fill="black"/><rect x="50" y="85" width="5" height="5" fill="black"/><rect x="65" y="80" width="5" height="5" fill="black"/>
+              <rect x="80" y="70" width="5" height="5" fill="black"/><rect x="90" y="80" width="5" height="5" fill="black"/><rect x="80" y="85" width="5" height="5" fill="black"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Exams + Payments -->
+        <div class="xl:col-span-2 space-y-6">
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-gray-800">Examination History</h3>
+              <button onclick="showPage('examinations')" class="btn-primary btn-sm"><i class="fa-solid fa-plus mr-1"></i>New Exam</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table>
+                <thead><tr><th>Date</th><th>Type</th><th>Body Part</th><th>Status</th><th>Report</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td>16/08/2026</td><td>MRI</td><td>Brain</td>
+                    <td><span class="badge badge-green">Completed</span></td>
+                    <td><span class="badge badge-green">Ready</span></td>
+                    <td class="flex gap-2 flex-wrap">
+                      <button onclick="openModal('report-modal')" class="btn-outline btn-sm"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button>
+                      <button onclick="showPage('mri-viewer')" class="btn-primary btn-sm"><i class="fa-solid fa-eye mr-1"></i>View Images</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>02/06/2026</td><td>MRI</td><td>Spine</td>
+                    <td><span class="badge badge-green">Completed</span></td>
+                    <td><span class="badge badge-green">Ready</span></td>
+                    <td class="flex gap-2 flex-wrap">
+                      <button onclick="openModal('report-modal')" class="btn-outline btn-sm"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button>
+                      <button onclick="showPage('mri-viewer')" class="btn-primary btn-sm"><i class="fa-solid fa-eye mr-1"></i>View Images</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>14/11/2025</td><td>CT</td><td>Abdomen</td>
+                    <td><span class="badge badge-green">Completed</span></td>
+                    <td><span class="badge badge-green">Ready</span></td>
+                    <td class="flex gap-2 flex-wrap">
+                      <button onclick="openModal('report-modal')" class="btn-outline btn-sm"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button>
+                      <button class="btn-outline btn-sm text-gray-400" style="border-color:#e2e8f0"><i class="fa-solid fa-eye mr-1"></i>View Images</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-bold text-gray-800 mb-4">Payment History</h3>
+            <table>
+              <thead><tr><th>Examination</th><th>Price</th><th>Paid</th><th>Balance</th><th>Method</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>MRI Brain</td><td>$650</td><td>$650</td><td>$0</td><td>Card</td><td><span class="badge badge-green">Paid</span></td></tr>
+                <tr><td>MRI Spine</td><td>$600</td><td>$600</td><td>$0</td><td>Cash</td><td><span class="badge badge-green">Paid</span></td></tr>
+                <tr><td>CT Abdomen</td><td>$450</td><td>$300</td><td>$150</td><td>Insurance</td><td><span class="badge badge-yellow">Partial</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MRI VIEWER -->
+    <div id="page-mri-viewer" class="page" style="background:#0a0f1a;min-height:100vh;display:none;flex-direction:column">
+      <!-- Top Toolbar -->
+      <div class="flex items-center gap-2 px-4 py-2" style="background:#111827;border-bottom:1px solid #1f2937">
+        <button onclick="showPage('patient-profile')" class="px-3 py-1.5 rounded text-xs font-semibold" style="background:#374151;color:#9ca3af"><i class="fa-solid fa-arrow-left mr-1"></i>Back</button>
+        <span class="text-white font-bold text-sm ml-2">MRI Brain · Ahmed Al-Rashid · P-001</span>
+        <div class="flex-1"></div>
+        <div class="flex gap-1">
+          <button class="mri-tool-btn" onclick="mriZoom(1.2)" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+          <button class="mri-tool-btn" onclick="mriZoom(0.8)" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+          <button class="mri-tool-btn" title="Pan"><i class="fa-solid fa-up-down-left-right"></i></button>
+          <button class="mri-tool-btn" onclick="mriAdjust('brightness',10)" title="Brightness+"><i class="fa-solid fa-sun"></i></button>
+          <button class="mri-tool-btn" onclick="mriAdjust('contrast',10)" title="Contrast+"><i class="fa-solid fa-circle-half-stroke"></i></button>
+          <button class="mri-tool-btn" onclick="mriInvert()" title="Invert"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+          <button class="mri-tool-btn" onclick="mriReset()" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+          <button class="mri-tool-btn" onclick="toggleMriFullscreen()" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+        </div>
+      </div>
+      <!-- Main Viewer -->
+      <div class="flex flex-1" style="min-height:0">
+        <!-- Thumbnail Strip -->
+        <div class="overflow-y-auto py-3 px-2 space-y-2" style="background:#111827;width:90px;border-right:1px solid #1f2937">
+          <div id="mri-thumbs"></div>
+        </div>
+        <!-- Canvas Area -->
+        <div class="flex-1 flex items-center justify-center" style="background:#0a0f1a" id="mri-canvas-wrapper">
+          <canvas id="mri-main-canvas" width="480" height="480" style="border:1px solid #1f2937;border-radius:4px"></canvas>
+        </div>
+        <!-- Right Panel -->
+        <div class="overflow-y-auto p-4 space-y-4" style="background:#111827;width:220px;border-left:1px solid #1f2937;color:#e5e7eb;font-size:12px">
+          <div>
+            <p class="font-bold text-xs mb-2" style="color:#6b7280;letter-spacing:.8px">PATIENT INFO</p>
+            <p class="font-semibold text-white">Ahmed Al-Rashid</p>
+            <p style="color:#9ca3af">ID: P-001</p>
+            <p style="color:#9ca3af">DOB: 15/03/1985</p>
+            <p style="color:#9ca3af">Sex: Male</p>
+          </div>
+          <div>
+            <p class="font-bold text-xs mb-2" style="color:#6b7280;letter-spacing:.8px">STUDY INFO</p>
+            <p style="color:#9ca3af">Date: 16/08/2026</p>
+            <p style="color:#9ca3af">Modality: MRI</p>
+            <p style="color:#9ca3af">Body Part: Brain</p>
+            <p style="color:#9ca3af">Protocol: T1W+T2W</p>
+            <p style="color:#9ca3af">Slices: 20</p>
+            <p style="color:#9ca3af">Thickness: 5mm</p>
+          </div>
+          <div>
+            <p class="font-bold text-xs mb-2" style="color:#6b7280;letter-spacing:.8px">WINDOW</p>
+            <div class="space-y-2">
+              <div><span style="color:#9ca3af">Brightness</span><div class="h-1 rounded mt-1" style="background:#374151"><div id="bright-bar" class="h-1 rounded" style="background:#2563eb;width:50%"></div></div></div>
+              <div><span style="color:#9ca3af">Contrast</span><div class="h-1 rounded mt-1" style="background:#374151"><div id="contrast-bar" class="h-1 rounded" style="background:#0891b2;width:50%"></div></div></div>
+            </div>
+          </div>
+          <div>
+            <p class="font-bold text-xs mb-2" style="color:#6b7280;letter-spacing:.8px">TOOLS</p>
+            <div class="space-y-1">
+              <button class="w-full text-left px-2 py-1.5 rounded text-xs" style="background:#1f2937;color:#d1d5db"><i class="fa-solid fa-ruler mr-2 text-blue-400"></i>Measure</button>
+              <button class="w-full text-left px-2 py-1.5 rounded text-xs" style="background:#1f2937;color:#d1d5db"><i class="fa-solid fa-pen mr-2 text-yellow-400"></i>Annotate</button>
+              <button class="w-full text-left px-2 py-1.5 rounded text-xs" style="background:#1f2937;color:#d1d5db"><i class="fa-solid fa-print mr-2 text-green-400"></i>Print</button>
+              <button class="w-full text-left px-2 py-1.5 rounded text-xs" style="background:#1f2937;color:#d1d5db"><i class="fa-solid fa-share mr-2 text-purple-400"></i>Share</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom Slice Bar -->
+      <div class="flex items-center gap-4 px-6 py-3" style="background:#111827;border-top:1px solid #1f2937">
+        <span id="slice-counter" class="text-white text-sm font-semibold w-24">Slice 4 / 20</span>
+        <input type="range" id="slice-slider" min="0" max="9" value="3" class="flex-1" oninput="goToSlice(parseInt(this.value))" style="accent-color:#2563eb">
+        <span class="text-gray-400 text-xs">Use mouse wheel or slider to navigate</span>
+      </div>
+    </div>
+
+    <!-- NEW EXAMINATION -->
+    <div id="page-examinations" class="page p-6">
+      <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">New Examination</h2><p class="text-gray-500 text-sm mt-1">Schedule and create a new examination</p></div>
+      <div class="card p-6 max-w-3xl">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Patient</label>
+            <select><option>Ahmed Al-Rashid (P-001)</option><option>Sara Johnson (P-002)</option><option>Mohammed Al-Farsi (P-003)</option><option>Emily Chen (P-004)</option><option>Khalid Al-Mansouri (P-005)</option><option>Laura Martinez (P-006)</option><option>Omar Hassan (P-007)</option><option>Fatima Al-Zahra (P-008)</option><option>David Thompson (P-009)</option><option>Noor Al-Said (P-010)</option></select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Modality</label>
+            <div class="flex gap-4 flex-wrap">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modality" value="MRI" checked class="accent-blue-600"><span class="text-sm font-medium">MRI</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modality" value="CT" class="accent-blue-600"><span class="text-sm font-medium">CT</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modality" value="X-Ray" class="accent-blue-600"><span class="text-sm font-medium">X-Ray</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="modality" value="Ultrasound" class="accent-blue-600"><span class="text-sm font-medium">Ultrasound</span></label>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Body Part</label>
+            <select><option>Brain</option><option>Spine (Cervical)</option><option>Spine (Lumbar)</option><option>Chest</option><option>Abdomen</option><option>Pelvis</option><option>Knee</option><option>Shoulder</option><option>Hip</option><option>Wrist</option><option>Ankle</option></select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Referring Doctor</label>
+            <select><option>Dr. Sarah Miller</option><option>Dr. James Wilson</option><option>Dr. Aisha Patel</option><option>Dr. Robert Chen</option></select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Price ($)</label>
+            <input type="number" placeholder="650" value="650">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Payment Status</label>
+            <select><option>Paid</option><option>Partial</option><option>Pending</option></select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Appointment Date & Time</label>
+            <input type="datetime-local" value="2026-08-16T09:00">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Room</label>
+            <select><option>Room 1 - MRI 3T</option><option>Room 2 - MRI 1.5T</option><option>Room 3 - CT</option><option>Room 4 - X-Ray</option><option>Room 5 - Ultrasound</option></select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Clinical Notes</label>
+            <textarea rows="3" placeholder="Enter clinical notes, indication, relevant history..."></textarea>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button onclick="submitExam()" class="btn-primary px-8"><i class="fa-solid fa-save mr-2"></i>Submit Examination</button>
+          <button class="btn-outline">Clear Form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div id="page-reports" class="page p-6">
+      <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">Reports</h2><p class="text-gray-500 text-sm mt-1">Manage radiology reports</p></div>
+      <div class="card p-5">
+        <div class="flex gap-2 mb-5">
+          <button class="tab-btn active" onclick="switchTab('reports','pending',this)">Pending (5)</button>
+          <button class="tab-btn" onclick="switchTab('reports','completed',this)">Completed (5)</button>
+        </div>
+        <div id="reports-pending">
+          <table>
+            <thead><tr><th>Patient</th><th>Examination</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Sara Johnson</td><td>CT Chest</td><td>Dr. Robert Chen</td><td>16/08/2026</td><td><span class="badge badge-yellow">Pending</span></td><td><button onclick="openModal('report-modal')" class="btn-outline btn-sm">View / Edit</button></td></tr>
+              <tr><td>Khalid Al-Mansouri</td><td>MRI Knee</td><td>Dr. Aisha Patel</td><td>16/08/2026</td><td><span class="badge badge-yellow">Pending</span></td><td><button onclick="openModal('report-modal')" class="btn-outline btn-sm">View / Edit</button></td></tr>
+              <tr><td>Omar Hassan</td><td>CT Brain</td><td>Dr. James Wilson</td><td>15/08/2026</td><td><span class="badge badge-red">Urgent</span></td><td><button onclick="openModal('report-modal')" class="btn-outline btn-sm">View / Edit</button></td></tr>
+              <tr><td>Fatima Al-Zahra</td><td>MRI Brain</td><td>Dr. Sarah Miller</td><td>15/08/2026</td><td><span class="badge badge-yellow">Pending</span></td><td><button onclick="openModal('report-modal')" class="btn-outline btn-sm">View / Edit</button></td></tr>
+              <tr><td>Noor Al-Said</td><td>MRI Spine</td><td>Dr. Aisha Patel</td><td>14/08/2026</td><td><span class="badge badge-yellow">Pending</span></td><td><button onclick="openModal('report-modal')" class="btn-outline btn-sm">View / Edit</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="reports-completed" class="hidden">
+          <table>
+            <thead><tr><th>Patient</th><th>Examination</th><th>Doctor</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Ahmed Al-Rashid</td><td>MRI Brain</td><td>Dr. Sarah Miller</td><td>16/08/2026</td><td><span class="badge badge-green">Completed</span></td><td><button onclick="openModal('report-modal')" class="btn-primary btn-sm">View Report</button></td></tr>
+              <tr><td>Mohammed Al-Farsi</td><td>MRI Spine</td><td>Dr. James Wilson</td><td>15/08/2026</td><td><span class="badge badge-green">Completed</span></td><td><button onclick="openModal('report-modal')" class="btn-primary btn-sm">View Report</button></td></tr>
+              <tr><td>Emily Chen</td><td>X-Ray Chest</td><td>Dr. Robert Chen</td><td>14/08/2026</td><td><span class="badge badge-green">Completed</span></td><td><button onclick="openModal('report-modal')" class="btn-primary btn-sm">View Report</button></td></tr>
+              <tr><td>Laura Martinez</td><td>MRI Abdomen</td><td>Dr. Aisha Patel</td><td>13/08/2026</td><td><span class="badge badge-green">Completed</span></td><td><button onclick="openModal('report-modal')" class="btn-primary btn-sm">View Report</button></td></tr>
+              <tr><td>David Thompson</td><td>CT Knee</td><td>Dr. James Wilson</td><td>12/08/2026</td><td><span class="badge badge-green">Completed</span></td><td><button onclick="openModal('report-modal')" class="btn-primary btn-sm">View Report</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div id="page-appointments" class="page p-6">
+      <div class="flex items-center justify-between mb-6">
+        <div><h2 class="text-2xl font-bold text-gray-800">Appointments</h2><p class="text-gray-500 text-sm mt-1">Schedule and manage appointments</p></div>
+        <div class="flex gap-2">
+          <button class="tab-btn active" id="appt-list-btn" onclick="switchApptView('list')"><i class="fa-solid fa-list mr-1"></i>List</button>
+          <button class="tab-btn" id="appt-cal-btn" onclick="switchApptView('calendar')"><i class="fa-solid fa-calendar mr-1"></i>Calendar</button>
+        </div>
+      </div>
+      <!-- List View -->
+      <div id="appt-list-view" class="card p-5">
+        <table>
+          <thead><tr><th>Patient</th><th>Type</th><th>Date & Time</th><th>Status</th><th>Room</th><th>Doctor</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Ahmed Al-Rashid</td><td>MRI Brain</td><td>16/08/2026 09:00</td><td><span class="badge badge-blue">Scheduled</span></td><td>Room 1</td><td>Dr. Sarah Miller</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Sara Johnson</td><td>CT Chest</td><td>16/08/2026 10:00</td><td><span class="badge badge-yellow">Pending</span></td><td>Room 3</td><td>Dr. Robert Chen</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Mohammed Al-Farsi</td><td>MRI Spine</td><td>16/08/2026 10:30</td><td><span class="badge badge-green">Confirmed</span></td><td>Room 2</td><td>Dr. James Wilson</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Emily Chen</td><td>X-Ray Chest</td><td>16/08/2026 11:00</td><td><span class="badge badge-blue">Scheduled</span></td><td>Room 4</td><td>Dr. Robert Chen</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Khalid Al-Mansouri</td><td>MRI Knee</td><td>16/08/2026 11:30</td><td><span class="badge badge-yellow">Pending</span></td><td>Room 1</td><td>Dr. Aisha Patel</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Laura Martinez</td><td>MRI Abdomen</td><td>17/08/2026 09:00</td><td><span class="badge badge-blue">Scheduled</span></td><td>Room 2</td><td>Dr. Aisha Patel</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Omar Hassan</td><td>CT Brain</td><td>17/08/2026 10:30</td><td><span class="badge badge-red">Urgent</span></td><td>Room 3</td><td>Dr. James Wilson</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Fatima Al-Zahra</td><td>MRI Brain</td><td>18/08/2026 11:00</td><td><span class="badge badge-blue">Scheduled</span></td><td>Room 1</td><td>Dr. Sarah Miller</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>David Thompson</td><td>X-Ray Knee</td><td>18/08/2026 13:00</td><td><span class="badge badge-green">Confirmed</span></td><td>Room 4</td><td>Dr. Robert Chen</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+            <tr><td>Noor Al-Said</td><td>MRI Spine</td><td>19/08/2026 14:30</td><td><span class="badge badge-red">Urgent</span></td><td>Room 2</td><td>Dr. Aisha Patel</td><td><button class="btn-outline btn-sm">Edit</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Calendar View -->
+      <div id="appt-cal-view" class="hidden card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-gray-700">Week of August 16–22, 2026</h3>
+          <div class="flex gap-2"><button class="btn-outline btn-sm"><i class="fa-solid fa-chevron-left"></i></button><button class="btn-outline btn-sm"><i class="fa-solid fa-chevron-right"></i></button></div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full" style="table-layout:fixed">
+            <thead>
+              <tr>
+                <th style="width:60px;color:#64748b;font-size:11px"></th>
+                <th class="text-center p-2" style="color:#2563eb;font-size:12px">SUN<br><span class="text-lg font-bold text-gray-800">16</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">MON<br><span class="text-lg font-bold text-gray-800">17</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">TUE<br><span class="text-lg font-bold text-gray-800">18</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">WED<br><span class="text-lg font-bold text-gray-800">19</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">THU<br><span class="text-lg font-bold text-gray-800">20</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">FRI<br><span class="text-lg font-bold text-gray-800">21</span></th>
+                <th class="text-center p-2" style="font-size:12px;color:#64748b">SAT<br><span class="text-lg font-bold text-gray-800">22</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-xs text-gray-400 p-1 text-right pr-2">09:00</td>
+                <td class="week-cell"><div class="appt-block" style="background:#dbeafe;color:#1d4ed8">Ahmed - MRI Brain</div></td>
+                <td class="week-cell"><div class="appt-block" style="background:#dcfce7;color:#15803d">Laura - MRI Abd.</div></td>
+                <td class="week-cell"><div class="appt-block" style="background:#dbeafe;color:#1d4ed8">Fatima - MRI Brain</div></td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+              </tr>
+              <tr>
+                <td class="text-xs text-gray-400 p-1 text-right pr-2">10:00</td>
+                <td class="week-cell"><div class="appt-block" style="background:#fef3c7;color:#b45309">Sara - CT Chest</div></td>
+                <td class="week-cell"><div class="appt-block" style="background:#fee2e2;color:#b91c1c">Omar - CT Brain 🔴</div></td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+              </tr>
+              <tr>
+                <td class="text-xs text-gray-400 p-1 text-right pr-2">10:30</td>
+                <td class="week-cell"><div class="appt-block" style="background:#dcfce7;color:#15803d">Mohammed - MRI Spine</div></td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+              </tr>
+              <tr>
+                <td class="text-xs text-gray-400 p-1 text-right pr-2">11:00</td>
+                <td class="week-cell"><div class="appt-block" style="background:#dbeafe;color:#1d4ed8">Emily - X-Ray Chest</div><div class="appt-block" style="background:#fef3c7;color:#b45309">Khalid - MRI Knee</div></td>
+                <td class="week-cell"></td>
+                <td class="week-cell"><div class="appt-block" style="background:#dbeafe;color:#1d4ed8">David - X-Ray Knee</div></td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+              </tr>
+              <tr>
+                <td class="text-xs text-gray-400 p-1 text-right pr-2">14:30</td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+                <td class="week-cell"><div class="appt-block" style="background:#fee2e2;color:#b91c1c">Noor - MRI Spine 🔴</div></td>
+                <td class="week-cell"></td><td class="week-cell"></td><td class="week-cell"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="page-payments" class="page p-6">
+      <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">Payments</h2><p class="text-gray-500 text-sm mt-1">Financial overview and payment tracking</p></div>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="stat-card text-center">
+          <p class="text-gray-500 text-sm mb-1">Total Revenue</p>
+          <p class="text-3xl font-bold text-gray-800">$28,450</p>
+          <p class="text-xs text-green-500 mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>12% vs last month</p>
+        </div>
+        <div class="stat-card text-center">
+          <p class="text-gray-500 text-sm mb-1">Collected</p>
+          <p class="text-3xl font-bold text-green-600">$24,800</p>
+          <p class="text-xs text-gray-400 mt-1">87% collection rate</p>
+        </div>
+        <div class="stat-card text-center">
+          <p class="text-gray-500 text-sm mb-1">Outstanding</p>
+          <p class="text-3xl font-bold text-red-500">$3,650</p>
+          <p class="text-xs text-gray-400 mt-1">13% pending</p>
+        </div>
+      </div>
+      <div class="card p-5">
+        <div class="overflow-x-auto">
+          <table>
+            <thead><tr><th>Patient</th><th>Examination</th><th>Price</th><th>Paid</th><th>Balance</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Ahmed Al-Rashid</td><td>MRI Brain</td><td>$650</td><td>$650</td><td>$0</td><td>Card</td><td>16/08/2026</td><td><span class="badge badge-green">Paid</span></td></tr>
+              <tr><td>Sara Johnson</td><td>CT Chest</td><td>$480</td><td>$480</td><td>$0</td><td>Insurance</td><td>16/08/2026</td><td><span class="badge badge-green">Paid</span></td></tr>
+              <tr><td>Mohammed Al-Farsi</td><td>MRI Spine</td><td>$600</td><td>$300</td><td>$300</td><td>Cash</td><td>15/08/2026</td><td><span class="badge badge-yellow">Partial</span></td></tr>
+              <tr><td>Emily Chen</td><td>X-Ray Chest</td><td>$180</td><td>$0</td><td>$180</td><td>—</td><td>14/08/2026</td><td><span class="badge badge-red">Pending</span></td></tr>
+              <tr><td>Khalid Al-Mansouri</td><td>MRI Knee</td><td>$580</td><td>$580</td><td>$0</td><td>Card</td><td>14/08/2026</td><td><span class="badge badge-green">Paid</span></td></tr>
+              <tr><td>Laura Martinez</td><td>MRI Abdomen</td><td>$700</td><td>$700</td><td>$0</td><td>Insurance</td><td>13/08/2026</td><td><span class="badge badge-green">Paid</span></td></tr>
+              <tr><td>Omar Hassan</td><td>CT Brain</td><td>$520</td><td>$260</td><td>$260</td><td>Cash</td><td>13/08/2026</td><td><span class="badge badge-yellow">Partial</span></td></tr>
+              <tr><td>Fatima Al-Zahra</td><td>MRI Brain</td><td>$650</td><td>$0</td><td>$650</td><td>—</td><td>12/08/2026</td><td><span class="badge badge-red">Pending</span></td></tr>
+              <tr><td>David Thompson</td><td>CT Knee</td><td>$420</td><td>$420</td><td>$0</td><td>Card</td><td>12/08/2026</td><td><span class="badge badge-green">Paid</span></td></tr>
+              <tr><td>Noor Al-Said</td><td>MRI Spine</td><td>$600</td><td>$340</td><td>$260</td><td>Insurance</td><td>11/08/2026</td><td><span class="badge badge-yellow">Partial</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCTORS -->
+    <div id="page-doctors" class="page p-6">
+      <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">Doctors</h2><p class="text-gray-500 text-sm mt-1">Radiologists and referring physicians</p></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div class="card p-5 text-center">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3" style="background:linear-gradient(135deg,#2563eb,#0891b2)">SM</div>
+          <h3 class="font-bold text-gray-800">Dr. Sarah Miller</h3>
+          <p class="text-sm text-blue-600 font-semibold mt-1">Neuroradiology</p>
+          <p class="text-xs text-gray-400 mt-2">15 years experience</p>
+          <div class="mt-3 space-y-1 text-xs text-gray-500"><p><i class="fa-solid fa-phone mr-1"></i>+971 50 111 2222</p><p><i class="fa-solid fa-envelope mr-1"></i>s.miller@mediscan.com</p></div>
+          <div class="mt-3 flex justify-center gap-3 text-xs">
+            <div class="text-center"><p class="font-bold text-gray-800">142</p><p class="text-gray-400">Reports</p></div>
+            <div class="text-center"><p class="font-bold text-gray-800">98%</p><p class="text-gray-400">Rate</p></div>
+          </div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3" style="background:linear-gradient(135deg,#7c3aed,#db2777)">JW</div>
+          <h3 class="font-bold text-gray-800">Dr. James Wilson</h3>
+          <p class="text-sm text-purple-600 font-semibold mt-1">Body Radiology</p>
+          <p class="text-xs text-gray-400 mt-2">12 years experience</p>
+          <div class="mt-3 space-y-1 text-xs text-gray-500"><p><i class="fa-solid fa-phone mr-1"></i>+971 50 333 4444</p><p><i class="fa-solid fa-envelope mr-1"></i>j.wilson@mediscan.com</p></div>
+          <div class="mt-3 flex justify-center gap-3 text-xs">
+            <div class="text-center"><p class="font-bold text-gray-800">118</p><p class="text-gray-400">Reports</p></div>
+            <div class="text-center"><p class="font-bold text-gray-800">96%</p><p class="text-gray-400">Rate</p></div>
+          </div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3" style="background:linear-gradient(135deg,#059669,#0891b2)">AP</div>
+          <h3 class="font-bold text-gray-800">Dr. Aisha Patel</h3>
+          <p class="text-sm text-teal-600 font-semibold mt-1">MSK Radiology</p>
+          <p class="text-xs text-gray-400 mt-2">10 years experience</p>
+          <div class="mt-3 space-y-1 text-xs text-gray-500"><p><i class="fa-solid fa-phone mr-1"></i>+971 50 555 6666</p><p><i class="fa-solid fa-envelope mr-1"></i>a.patel@mediscan.com</p></div>
+          <div class="mt-3 flex justify-center gap-3 text-xs">
+            <div class="text-center"><p class="font-bold text-gray-800">98</p><p class="text-gray-400">Reports</p></div>
+            <div class="text-center"><p class="font-bold text-gray-800">99%</p><p class="text-gray-400">Rate</p></div>
+          </div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-3" style="background:linear-gradient(135deg,#dc2626,#ea580c)">RC</div>
+          <h3 class="font-bold text-gray-800">Dr. Robert Chen</h3>
+          <p class="text-sm text-red-600 font-semibold mt-1">Emergency Radiology</p>
+          <p class="text-xs text-gray-400 mt-2">8 years experience</p>
+          <div class="mt-3 space-y-1 text-xs text-gray-500"><p><i class="fa-solid fa-phone mr-1"></i>+971 50 777 8888</p><p><i class="fa-solid fa-envelope mr-1"></i>r.chen@mediscan.com</p></div>
+          <div class="mt-3 flex justify-center gap-3 text-xs">
+            <div class="text-center"><p class="font-bold text-gray-800">87</p><p class="text-gray-400">Reports</p></div>
+            <div class="text-center"><p class="font-bold text-gray-800">97%</p><p class="text-gray-400">Rate</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="page p-6">
+      <div class="mb-6"><h2 class="text-2xl font-bold text-gray-800">Settings</h2><p class="text-gray-500 text-sm mt-1">System configuration and preferences</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="card p-6">
+          <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-hospital mr-2 text-blue-600"></i>Center Information</h3>
+          <div class="space-y-4">
+            <div><label class="block text-sm font-semibold text-gray-700 mb-1">Center Name</label><input type="text" value="MediScan Radiology & MRI Center"></div>
+            <div><label class="block text-sm font-semibold text-gray-700 mb-1">Address</label><input type="text" value="123 Medical District, Dubai, UAE"></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Phone</label><input type="text" value="+971 4 123 4567"></div>
+              <div><label class="block text-sm font-semibold text-gray-700 mb-1">Email</label><input type="text" value="info@mediscan.com"></div>
+            </div>
+            <div><label class="block text-sm font-semibold text-gray-700 mb-1">License Number</label><input type="text" value="DHA-RAD-2024-0012"></div>
+          </div>
+          <button class="btn-primary mt-5">Save Changes</button>
+        </div>
+        <div class="card p-6">
+          <h3 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-bell mr-2 text-blue-600"></i>Notifications</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between"><span class="text-sm font-medium">Email notifications</span><div class="w-10 h-5 rounded-full bg-blue-600 relative cursor-pointer"><div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"></div></div></div>
+            <div class="flex items-center justify-between"><span class="text-sm font-medium">SMS alerts for appointments</span><div class="w-10 h-5 rounded-full bg-blue-600 relative cursor-pointer"><div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"></div></div></div>
+            <div class="flex items-center justify-between"><span class="text-sm font-medium">Report ready alerts</span><div class="w-10 h-5 rounded-full bg-blue-600 relative cursor-pointer"><div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"></div></div></div>
+            <div class="flex items-center justify-between"><span class="text-sm font-medium">Urgent case alerts</span><div class="w-10 h-5 rounded-full bg-red-500 relative cursor-pointer"><div class="w-4 h-4 bg-white rounded-full absolute right-0.5 top-0.5"></div></div></div>
+            <div class="flex items-center justify-between"><span class="text-sm font-medium">Payment reminders</span><div class="w-10 h-5 rounded-full bg-gray-300 relative cursor-pointer"><div class="w-4 h-4 bg-white rounded-full absolute left-0.5 top-0.5"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTAL DASHBOARD -->
+    <div id="page-portal-dashboard" class="page p-6" style="background:#f0fdf4;min-height:100vh">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#059669,#0891b2)">
+            <i class="fa-solid fa-user-shield text-white"></i>
+          </div>
+          <div><h2 class="text-2xl font-bold text-gray-800">Patient Portal</h2><p class="text-sm text-gray-500">Welcome, Ahmed Al-Rashid</p></div>
+        </div>
+        <button onclick="showPage('portal-login')" class="btn-outline text-sm"><i class="fa-solid fa-right-from-bracket mr-1"></i>Logout</button>
+      </div>
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2">
+          <div class="card p-5">
+            <h3 class="font-bold text-gray-800 mb-4">My Examinations</h3>
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th>Body Part</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>16/08/2026</td><td>MRI</td><td>Brain</td>
+                  <td><span class="badge badge-green">Completed</span></td>
+                  <td class="flex gap-2 flex-wrap">
+                    <button onclick="openModal('report-modal')" class="btn-outline btn-sm text-xs"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button>
+                    <button onclick="showPage('mri-viewer')" class="btn-primary btn-sm text-xs"><i class="fa-solid fa-eye mr-1"></i>View Images</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>02/06/2026</td><td>MRI</td><td>Spine</td>
+                  <td><span class="badge badge-green">Completed</span></td>
+                  <td class="flex gap-2 flex-wrap">
+                    <button onclick="openModal('report-modal')" class="btn-outline btn-sm text-xs"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button>
+                    <button onclick="showPage('mri-viewer')" class="btn-primary btn-sm text-xs"><i class="fa-solid fa-eye mr-1"></i>View Images</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>14/11/2025</td><td>CT</td><td>Abdomen</td>
+                  <td><span class="badge badge-green">Completed</span></td>
+                  <td><button onclick="openModal('report-modal')" class="btn-outline btn-sm text-xs"><i class="fa-solid fa-file-lines mr-1"></i>View Report</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="space-y-5">
+          <div class="card p-5">
+            <h3 class="font-bold text-gray-800 mb-3">My QR Code</h3>
+            <p class="text-xs text-gray-400 mb-3">Show this at reception</p>
+            <svg width="120" height="120" viewBox="0 0 100 100" class="mx-auto border p-1 rounded-lg">
+              <rect width="100" height="100" fill="white"/>
+              <rect x="5" y="5" width="25" height="25" fill="#059669"/><rect x="8" y="8" width="19" height="19" fill="white"/><rect x="11" y="11" width="13" height="13" fill="#059669"/>
+              <rect x="70" y="5" width="25" height="25" fill="#059669"/><rect x="73" y="8" width="19" height="19" fill="white"/><rect x="76" y="11" width="13" height="13" fill="#059669"/>
+              <rect x="5" y="70" width="25" height="25" fill="#059669"/><rect x="8" y="73" width="19" height="19" fill="white"/><rect x="11" y="76" width="13" height="13" fill="#059669"/>
+              <rect x="35" y="5" width="5" height="5" fill="#059669"/><rect x="45" y="5" width="5" height="5" fill="#059669"/><rect x="55" y="5" width="5" height="5" fill="#059669"/>
+              <rect x="35" y="35" width="5" height="5" fill="#059669"/><rect x="50" y="40" width="5" height="5" fill="#059669"/><rect x="65" y="35" width="5" height="5" fill="#059669"/>
+              <rect x="35" y="55" width="5" height="5" fill="#059669"/><rect x="55" y="50" width="5" height="5" fill="#059669"/><rect x="70" y="60" width="5" height="5" fill="#059669"/>
+              <rect x="80" y="35" width="5" height="5" fill="#059669"/><rect x="90" y="45" width="5" height="5" fill="#059669"/>
+              <rect x="40" y="70" width="5" height="5" fill="#059669"/><rect x="55" y="75" width="5" height="5" fill="#059669"/>
+              <rect x="80" y="70" width="5" height="5" fill="#059669"/><rect x="90" y="85" width="5" height="5" fill="#059669"/>
+            </svg>
+            <p class="text-center text-xs font-semibold text-gray-600 mt-2">P-001</p>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-bold text-gray-800 mb-3">Next Appointment</h3>
+            <div class="p-3 rounded-lg" style="background:#f0fdf4;border:1px solid #86efac">
+              <p class="font-semibold text-green-800">MRI Brain</p>
+              <p class="text-sm text-green-600 mt-1"><i class="fa-solid fa-calendar mr-1"></i>16/08/2026 09:00</p>
+              <p class="text-xs text-green-500 mt-1">Room 1 · Dr. Sarah Miller</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end app layout -->
+
+<!-- ========== MODALS ========== -->
+
+<!-- Add Patient Modal -->
+<div id="add-patient-modal" class="modal-overlay">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-user-plus mr-2 text-blue-600"></i>Add New Patient</h3>
+      <button onclick="closeModal('add-patient-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Full Name *</label><input type="text" placeholder="John Doe"></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Phone *</label><input type="text" placeholder="+971 50 000 0000"></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Date of Birth *</label><input type="date"></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Gender</label><select><option>Male</option><option>Female</option></select></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Email</label><input type="email" placeholder="patient@email.com"></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1">Referring Doctor</label><select><option>Dr. Sarah Miller</option><option>Dr. James Wilson</option><option>Dr. Aisha Patel</option><option>Dr. Robert Chen</option></select></div>
+      <div class="md:col-span-2"><label class="block text-sm font-semibold text-gray-700 mb-1">Medical Notes</label><textarea rows="3" placeholder="Relevant medical history, allergies, conditions..."></textarea></div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="addPatient()" class="btn-primary"><i class="fa-solid fa-save mr-2"></i>Save Patient</button>
+      <button onclick="closeModal('add-patient-modal')" class="btn-outline">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div id="report-modal" class="modal-overlay">
+  <div class="modal-box p-0">
+    <div class="flex items-center justify-between p-5 border-b" style="background:#1e2a3a">
+      <div>
+        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-file-medical mr-2"></i>Radiology Report</h3>
+        <p class="text-xs text-gray-400 mt-0.5">MRI Brain · Ahmed Al-Rashid · 16/08/2026</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="px-3 py-1.5 rounded text-xs font-semibold" style="background:#374151;color:#d1d5db"><i class="fa-solid fa-print mr-1"></i>Print</button>
+        <button class="px-3 py-1.5 rounded text-xs font-semibold" style="background:#374151;color:#d1d5db"><i class="fa-solid fa-download mr-1"></i>PDF</button>
+        <button onclick="closeModal('report-modal')" class="text-gray-400 hover:text-white ml-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+    </div>
+    <div class="p-6 font-mono text-sm" style="background:#fafafa">
+      <div class="text-center mb-6 pb-4 border-b">
+        <p class="text-xl font-bold text-gray-800">MediScan Radiology & MRI Center</p>
+        <p class="text-sm text-gray-500">123 Medical District, Dubai, UAE | +971 4 123 4567</p>
+        <p class="text-sm text-gray-500">License: DHA-RAD-2024-0012</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-5 text-xs">
+        <div><p><strong>Patient:</strong> Ahmed Al-Rashid</p><p><strong>ID:</strong> P-001</p><p><strong>DOB:</strong> 15/03/1985</p><p><strong>Sex:</strong> Male</p></div>
+        <div><p><strong>Study Date:</strong> 16/08/2026</p><p><strong>Accession:</strong> MS-2026-08-0042</p><p><strong>Modality:</strong> MRI Brain</p><p><strong>Referring:</strong> Dr. James Wilson</p></div>
+      </div>
+      <div class="space-y-4 text-sm leading-relaxed font-sans">
+        <div><p class="font-bold text-gray-700 border-b border-dashed pb-1 mb-2 text-xs uppercase tracking-wide">Clinical Indication</p><p class="text-gray-600">Persistent headaches, visual disturbances. Rule out space-occupying lesion.</p></div>
+        <div><p class="font-bold text-gray-700 border-b border-dashed pb-1 mb-2 text-xs uppercase tracking-wide">Technique</p><p class="text-gray-600">MRI brain was performed using a 3T system. Sequences included: axial T1W, axial T2W FLAIR, coronal T2W, sagittal T1W, and post-gadolinium T1W sequences.</p></div>
+        <div><p class="font-bold text-gray-700 border-b border-dashed pb-1 mb-2 text-xs uppercase tracking-wide">Findings</p>
+          <p class="text-gray-600"><strong>Brain parenchyma:</strong> Normal gray-white matter differentiation. No focal signal abnormality identified. No restricted diffusion.</p>
+          <p class="text-gray-600 mt-1"><strong>Ventricles:</strong> Normal size and configuration. No hydrocephalus.</p>
+          <p class="text-gray-600 mt-1"><strong>Midline structures:</strong> Midline shift absent. Corpus callosum intact.</p>
+          <p class="text-gray-600 mt-1"><strong>Posterior fossa:</strong> Cerebellum and brainstem appear unremarkable. Fourth ventricle is normal.</p>
+          <p class="text-gray-600 mt-1"><strong>Vascular structures:</strong> Major intracranial vessels appear patent. No aneurysm or vascular malformation identified.</p>
+          <p class="text-gray-600 mt-1"><strong>Extra-axial spaces:</strong> No subdural or epidural collection. Sulci and cisterns are appropriate for age.</p>
+          <p class="text-gray-600 mt-1"><strong>Post-contrast:</strong> No abnormal enhancement identified.</p>
+        </div>
+        <div class="p-3 rounded-lg" style="background:#f0fdf4;border-left:4px solid #22c55e">
+          <p class="font-bold text-green-800 text-xs uppercase tracking-wide mb-1">Impression</p>
+          <p class="text-green-700 text-sm">Normal MRI brain. No evidence of acute infarction, space-occupying lesion, or abnormal enhancement. Clinical correlation recommended for persistent symptoms.</p>
+        </div>
+        <div class="mt-5 pt-4 border-t flex justify-between items-end">
+          <div>
+            <p class="text-sm font-bold text-gray-800">Dr. Sarah Miller, MD</p>
+            <p class="text-xs text-gray-500">Consultant Radiologist — Neuroradiology</p>
+            <p class="text-xs text-gray-500">DHA License: DHA-00-0012345</p>
+          </div>
+          <div class="text-right text-xs text-gray-400">
+            <p>Signed: 16/08/2026 14:32</p>
+            <p>Report ID: RPT-2026-0842</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCRIPTS ========== -->
+<style>
+  .mri-tool-btn { background:#374151; color:#9ca3af; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:13px; transition:all .15s; }
+  .mri-tool-btn:hover { background:#4b5563; color:#fff; }
+</style>
+
+<script>
+// ===== STATE =====
+let currentPage = 'login';
+let currentSlice = 3;
+let mriScale = 1;
+let mriBrightness = 0;
+let mriContrast = 0;
+let mriInverted = false;
+let brightnessPct = 50;
+let contrastPct = 50;
+
+// ===== PATIENTS DATA =====
+const patients = [
+  {id:'P-001',name:'Ahmed Al-Rashid',phone:'+971 50 123 4567',dob:'15/03/1985',gender:'Male',doctor:'Dr. James Wilson'},
+  {id:'P-002',name:'Sara Johnson',phone:'+971 55 234 5678',dob:'22/07/1990',gender:'Female',doctor:'Dr. Robert Chen'},
+  {id:'P-003',name:'Mohammed Al-Farsi',phone:'+971 50 345 6789',dob:'08/11/1978',gender:'Male',doctor:'Dr. James Wilson'},
+  {id:'P-004',name:'Emily Chen',phone:'+971 55 456 7890',dob:'14/02/1995',gender:'Female',doctor:'Dr. Robert Chen'},
+  {id:'P-005',name:'Khalid Al-Mansouri',phone:'+971 50 567 8901',dob:'30/09/1982',gender:'Male',doctor:'Dr. Aisha Patel'},
+  {id:'P-006',name:'Laura Martinez',phone:'+971 55 678 9012',dob:'19/05/1988',gender:'Female',doctor:'Dr. Aisha Patel'},
+  {id:'P-007',name:'Omar Hassan',phone:'+971 50 789 0123',dob:'03/12/1975',gender:'Male',doctor:'Dr. James Wilson'},
+  {id:'P-008',name:'Fatima Al-Zahra',phone:'+971 55 890 1234',dob:'27/04/1993',gender:'Female',doctor:'Dr. Sarah Miller'},
+  {id:'P-009',name:'David Thompson',phone:'+971 50 901 2345',dob:'11/08/1969',gender:'Male',doctor:'Dr. Robert Chen'},
+  {id:'P-010',name:'Noor Al-Said',phone:'+971 55 012 3456',dob:'06/06/1997',gender:'Female',doctor:'Dr. Aisha Patel'},
+];
+
+function renderPatients(list) {
+  const tbody = document.getElementById('patients-tbody');
+  tbody.innerHTML = list.map(p => `
+    <tr>
+      <td><span class="badge badge-gray">${p.id}</span></td>
+      <td class="font-semibold text-gray-800">${p.name}</td>
+      <td>${p.phone}</td>
+      <td>${p.dob}</td>
+      <td>${p.gender}</td>
+      <td>${p.doctor}</td>
+      <td><button onclick="showPage('patient-profile')" class="btn-primary btn-sm"><i class="fa-solid fa-eye mr-1"></i>View</button></td>
+    </tr>`).join('');
+}
+
+function filterPatients(q) {
+  const filtered = patients.filter(p =>
+    p.name.toLowerCase().includes(q.toLowerCase()) ||
+    p.id.toLowerCase().includes(q.toLowerCase()) ||
+    p.phone.includes(q)
+  );
+  renderPatients(filtered);
+}
+
+// ===== PAGE NAVIGATION =====
+function showPage(page) {
+  const isAppPage = !['login','portal-login'].includes(page);
+  const isPortalPage = page === 'portal-dashboard';
+  const isMriPage = page === 'mri-viewer';
+
+  // Hide login screens
+  document.getElementById('login-page').classList.remove('active');
+  document.getElementById('portal-login-page').classList.remove('active');
+
+  // Handle app layout
+  const appLayout = document.getElementById('app-layout');
+  if (page === 'login') {
+    appLayout.classList.add('hidden');
+    document.getElementById('login-page').classList.add('active');
+    return;
+  }
+  if (page === 'portal-login') {
+    appLayout.classList.add('hidden');
+    document.getElementById('portal-login-page').classList.add('active');
+    return;
+  }
+
+  appLayout.classList.remove('hidden');
+  appLayout.classList.add('flex');
+
+  // Hide all content pages
+  document.querySelectorAll('#app-layout .page').forEach(p => {
+    p.classList.remove('active');
+    if (p.id === 'page-mri-viewer') p.style.display = 'none';
+  });
+
+  // Show target page
+  const targetId = 'page-' + page.replace(/-/g, '-');
+  const target = document.getElementById(targetId);
+  if (target) {
+    if (page === 'mri-viewer') {
+      target.style.display = 'flex';
+      target.classList.add('active');
+      setTimeout(() => { initMriViewer(); }, 50);
+    } else {
+      target.classList.add('active');
+    }
+  }
+
+  // Update sidebar active states
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  const navMap = {
+    'dashboard':'nav-dashboard','patients':'nav-patients','patient-profile':'nav-patients',
+    'appointments':'nav-appointments','examinations':'nav-examinations','reports':'nav-reports',
+    'payments':'nav-payments','doctors':'nav-doctors','settings':'nav-settings'
+  };
+  if (navMap[page]) {
+    const el = document.getElementById(navMap[page]);
+    if (el) el.classList.add('active');
+  }
+
+  currentPage = page;
+  if (page === 'patients') renderPatients(patients);
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  if (email && pass) {
+    showPage('dashboard');
+    showToast('Welcome back, Dr. Sarah Miller!');
+  }
+}
+
+function doLogout() {
+  showPage('login');
+}
+
+// ===== MODALS =====
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
+
+// ===== TOAST =====
+function showToast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.innerHTML = '<i class="fa-solid fa-circle-check mr-2 text-green-400"></i>' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ===== TABS =====
+function switchTab(section, tab, btn) {
+  if (section === 'reports') {
+    document.getElementById('reports-pending').classList.toggle('hidden', tab !== 'pending');
+    document.getElementById('reports-completed').classList.toggle('hidden', tab !== 'completed');
+  }
+  btn.closest('.card, .flex').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function switchApptView(view) {
+  document.getElementById('appt-list-view').classList.toggle('hidden', view !== 'list');
+  document.getElementById('appt-cal-view').classList.toggle('hidden', view !== 'calendar');
+  document.getElementById('appt-list-btn').classList.toggle('active', view === 'list');
+  document.getElementById('appt-cal-btn').classList.toggle('active', view === 'calendar');
+}
+
+// ===== EXAM SUBMIT =====
+function submitExam() {
+  closeModal && closeModal('');
+  showToast('Examination scheduled successfully!');
+}
+
+// ===== ADD PATIENT =====
+function addPatient() {
+  closeModal('add-patient-modal');
+  showToast('New patient added successfully!');
+}
+
+// ===== MRI VIEWER =====
+// Brain MRI slice definitions — vary ellipses/intensities per slice
+const mriSlices = [
+  { outerRx:110, outerRy:125, innerRx:70, innerRy:80, grayOuter:45, grayInner:90, gyriFolds:8, extras:[{x:-30,y:-10,rx:25,ry:20,g:75},{x:30,y:-15,rx:22,ry:18,g:72}] },
+  { outerRx:120, outerRy:135, innerRx:80, innerRy:90, grayOuter:42, grayInner:88, gyriFolds:10, extras:[{x:-35,y:0,rx:28,ry:22,g:78},{x:32,y:5,rx:25,ry:20,g:74}] },
+  { outerRx:130, outerRy:140, innerRx:88, innerRy:95, grayOuter:40, grayInner:86, gyriFolds:12, extras:[{x:-40,y:5,rx:30,ry:24,g:76},{x:38,y:8,rx:28,ry:22,g:72},{x:0,y:-50,rx:20,ry:15,g:60}] },
+  { outerRx:135, outerRy:145, innerRx:92, innerRy:100, grayOuter:38, grayInner:85, gyriFolds:14, extras:[{x:-42,y:8,rx:32,ry:26,g:80},{x:40,y:10,rx:30,ry:24,g:76},{x:0,y:30,rx:18,ry:12,g:55}] },
+  { outerRx:138, outerRy:148, innerRx:95, innerRy:105, grayOuter:36, grayInner:84, gyriFolds:14, extras:[{x:-45,y:10,rx:33,ry:27,g:78},{x:42,y:12,rx:31,ry:25,g:74},{x:5,y:25,rx:22,ry:16,g:58}] },
+  { outerRx:132, outerRy:142, innerRx:88, innerRy:98, grayOuter:38, grayInner:86, gyriFolds:12, extras:[{x:-40,y:5,rx:30,ry:24,g:76},{x:38,y:8,rx:28,ry:22,g:72}] },
+  { outerRx:125, outerRy:138, innerRx:82, innerRy:92, grayOuter:40, grayInner:87, gyriFolds:10, extras:[{x:-36,y:2,rx:27,ry:21,g:77},{x:34,y:6,rx:25,ry:19,g:73}] },
+  { outerRx:115, outerRy:130, innerRx:74, innerRy:84, grayOuter:43, grayInner:89, gyriFolds:8, extras:[{x:-32,y:-5,rx:24,ry:19,g:75},{x:30,y:-2,rx:22,ry:17,g:71}] },
+  { outerRx:105, outerRy:120, innerRx:65, innerRy:75, grayOuter:46, grayInner:91, gyriFolds:6, extras:[{x:-25,y:-8,rx:20,ry:15,g:73}] },
+  { outerRx:90, outerRy:105, innerRx:55, innerRy:62, grayOuter:50, grayInner:94, gyriFolds:4, extras:[{x:-20,y:-5,rx:16,ry:12,g:70}] },
+];
+
+function drawBrainSlice(canvas, sliceIdx, scale=1, brightness=0, contrast=0, inverted=false) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  ctx.clearRect(0,0,W,H);
+
+  const s = mriSlices[sliceIdx % mriSlices.length];
+
+  // Background (skull/scalp)
+  const bg = clamp(8 + brightness);
+  ctx.fillStyle = `rgb(${bg},${bg},${bg})`;
+  ctx.fillRect(0,0,W,H);
+
+  // Add subtle noise background
+  const imgData = ctx.getImageData(0,0,W,H);
+  const d = imgData.data;
+  for(let i=0;i<d.length;i+=4){
+    const n=(Math.random()-0.5)*6;
+    d[i]=clamp(d[i]+n); d[i+1]=clamp(d[i+1]+n); d[i+2]=clamp(d[i+2]+n);
+  }
+  ctx.putImageData(imgData,0,0);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  // Skull outer ring
+  const skullG = ctx.createRadialGradient(0,-10,s.outerRx*0.3, 0,0,s.outerRx*1.1);
+  skullG.addColorStop(0, grayStr(clamp(s.grayOuter+30+brightness)));
+  skullG.addColorStop(0.7, grayStr(clamp(s.grayOuter+brightness)));
+  skullG.addColorStop(1, grayStr(clamp(s.grayOuter-10+brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0,0,s.outerRx,s.outerRy,0,0,Math.PI*2);
+  ctx.fillStyle = skullG;
+  ctx.fill();
+
+  // Cortical gray matter ring
+  const cortex = ctx.createRadialGradient(0,-15,s.innerRx*0.4, 0,0,s.outerRx*0.95);
+  cortex.addColorStop(0, grayStr(clamp(s.grayInner+20+brightness)));
+  cortex.addColorStop(1, grayStr(clamp(s.grayInner-5+brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0,0,s.innerRx+24,s.innerRy+24,0,0,Math.PI*2);
+  ctx.fillStyle = cortex;
+  ctx.fill();
+
+  // White matter
+  const wm = ctx.createRadialGradient(-10,-20,10, 0,0,s.innerRx*0.85);
+  wm.addColorStop(0, grayStr(clamp(s.grayInner+35+brightness)));
+  wm.addColorStop(0.6, grayStr(clamp(s.grayInner+22+brightness)));
+  wm.addColorStop(1, grayStr(clamp(s.grayInner+8+brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0,0,s.innerRx,s.innerRy,0,0,Math.PI*2);
+  ctx.fillStyle = wm;
+  ctx.fill();
+
+  // Gyri folds simulation
+  for(let i=0; i<s.gyriFolds; i++){
+    const angle = (i / s.gyriFolds) * Math.PI * 2;
+    const rx2 = s.outerRx + 2;
+    const ry2 = s.outerRy + 2;
+    const fx = Math.cos(angle) * (s.outerRx - 8);
+    const fy = Math.sin(angle) * (s.outerRy - 8) * (s.outerRy/s.outerRx);
+    const gi = clamp(s.grayOuter + 15 + brightness + (Math.random()-0.5)*8);
+    ctx.beginPath();
+    ctx.ellipse(fx, fy, 12+Math.random()*6, 8+Math.random()*4, angle, 0, Math.PI*2);
+    ctx.fillStyle = grayStr(gi);
+    ctx.fill();
+  }
+
+  // Extra structures (basal ganglia, ventricles etc)
+  s.extras.forEach(e => {
+    const eg = ctx.createRadialGradient(e.x,e.y,2, e.x,e.y,e.rx);
+    eg.addColorStop(0, grayStr(clamp(e.g+20+brightness)));
+    eg.addColorStop(1, grayStr(clamp(e.g-10+brightness)));
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y, e.rx, e.ry, 0, 0, Math.PI*2);
+    ctx.fillStyle = eg;
+    ctx.fill();
+  });
+
+  // Lateral ventricles (dark CSF)
+  ctx.beginPath();
+  ctx.ellipse(-18, 0, 14, 10, -0.3, 0, Math.PI*2);
+  ctx.fillStyle = grayStr(clamp(12+brightness));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(18, 0, 14, 10, 0.3, 0, Math.PI*2);
+  ctx.fillStyle = grayStr(clamp(12+brightness));
+  ctx.fill();
+
+  // Falx cerebri (midline)
+  ctx.beginPath();
+  ctx.moveTo(0, -s.outerRy+5);
+  ctx.lineTo(0, -s.innerRy+10);
+  ctx.strokeStyle = grayStr(clamp(30+brightness));
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Sulci lines
+  for(let i=0;i<6;i++){
+    const ang = (i/6)*Math.PI*2 + 0.2;
+    const x1 = Math.cos(ang)*(s.innerRx+4), y1 = Math.sin(ang)*(s.innerRy+4);
+    const x2 = Math.cos(ang)*(s.innerRx+18), y2 = Math.sin(ang)*(s.innerRy+18);
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+    ctx.strokeStyle = grayStr(clamp(25+brightness));
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Invert
+  if(inverted){
+    const id2 = ctx.getImageData(0,0,W,H);
+    const d2 = id2.data;
+    for(let i=0;i<d2.length;i+=4){
+      d2[i]=255-d2[i]; d2[i+1]=255-d2[i+1]; d2[i+2]=255-d2[i+2];
+    }
+    ctx.putImageData(id2,0,0);
+  }
+
+  // Overlay text
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='11px monospace';
+  ctx.fillText('MediScan PACS v3.2', 8, 18);
+  ctx.fillText(`S:${sliceIdx+1} T2W`, 8, H-10);
+  ctx.fillText('Ahmed Al-Rashid', W-130, 18);
+  ctx.fillText('16/08/2026 09:14', W-130, 32);
+}
+
+function grayStr(v){ return `rgb(${v},${v},${v})`; }
+function clamp(v){ return Math.max(0,Math.min(255,Math.round(v))); }
+
+function drawThumb(canvas, sliceIdx){
+  canvas.width=70; canvas.height=70;
+  drawBrainSlice(canvas, sliceIdx, 0.42, 0, 0, false);
+}
+
+function initMriViewer(){
+  const thumbsDiv = document.getElementById('mri-thumbs');
+  if(thumbsDiv.children.length === 0){
+    for(let i=0;i<10;i++){
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'margin-bottom:6px;';
+      const c = document.createElement('canvas');
+      c.className = 'mri-thumb';
+      c.id = 'thumb-'+i;
+      c.title = 'Slice '+(i+1);
+      drawThumb(c, i);
+      c.onclick = () => goToSlice(i);
+      const lbl = document.createElement('p');
+      lbl.style.cssText='color:#6b7280;font-size:9px;text-align:center;margin-top:2px;';
+      lbl.textContent = 'S-'+(i+1);
+      wrapper.appendChild(c); wrapper.appendChild(lbl);
+      thumbsDiv.appendChild(wrapper);
+    }
+  }
+  goToSlice(currentSlice);
+}
+
+function goToSlice(idx){
+  currentSlice = idx;
+  const mainCanvas = document.getElementById('mri-main-canvas');
+  drawBrainSlice(mainCanvas, idx, mriScale, mriBrightness, mriContrast, mriInverted);
+  document.getElementById('slice-counter').textContent = `Slice ${idx+1} / 20`;
+  document.getElementById('slice-slider').value = idx;
+  document.querySelectorAll('.mri-thumb').forEach((c,i) => {
+    c.classList.toggle('selected', i===idx);
+  });
+}
+
+function mriZoom(factor){
+  mriScale = Math.max(0.3, Math.min(3, mriScale * factor));
+  goToSlice(currentSlice);
+}
+
+function mriAdjust(type, delta){
+  if(type==='brightness'){
+    mriBrightness = Math.max(-100, Math.min(100, mriBrightness+delta));
+    brightnessPct = 50 + mriBrightness/2;
+    const bar = document.getElementById('bright-bar');
+    if(bar) bar.style.width = clamp(brightnessPct)+'%';
+  }
+  if(type==='contrast'){
+    mriContrast = Math.max(-100, Math.min(100, mriContrast+delta));
+    contrastPct = 50 + mriContrast/2;
+    const bar = document.getElementById('contrast-bar');
+    if(bar) bar.style.width = clamp(contrastPct)+'%';
+  }
+  goToSlice(currentSlice);
+}
+
+function mriInvert(){
+  mriInverted = !mriInverted;
+  goToSlice(currentSlice);
+}
+
+function mriReset(){
+  mriScale=1; mriBrightness=0; mriContrast=0; mriInverted=false;
+  brightnessPct=50; contrastPct=50;
+  const bb=document.getElementById('bright-bar'), cb=document.getElementById('contrast-bar');
+  if(bb) bb.style.width='50%';
+  if(cb) cb.style.width='50%';
+  goToSlice(currentSlice);
+}
+
+function toggleMriFullscreen(){
+  const wrapper = document.getElementById('mri-canvas-wrapper');
+  if(!document.fullscreenElement){ wrapper.requestFullscreen(); }
+  else { document.exitFullscreen(); }
+}
+
+// Mouse wheel on main canvas
+document.addEventListener('DOMContentLoaded', ()=>{
+  const mc = document.getElementById('mri-main-canvas');
+  if(mc){
+    mc.addEventListener('wheel', (e)=>{
+      e.preventDefault();
+      const next = e.deltaY > 0 ? Math.min(9, currentSlice+1) : Math.max(0, currentSlice-1);
+      goToSlice(next);
+    }, {passive:false});
+  }
+  renderPatients(patients);
+});
+
+// Close modals on ESC
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+});
+</script>
+</body>
+</html>

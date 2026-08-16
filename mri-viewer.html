@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediScan — MRI Viewer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{sidebar:'#0f172a'}}}}</script>
+<style>
+  body { background:#0a0f1a; color:#e5e7eb; }
+  .mri-tool-btn {
+    background:#374151; color:#9ca3af; border:none; padding:6px 10px;
+    border-radius:6px; cursor:pointer; font-size:12px; transition:all .15s;
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .mri-tool-btn:hover { background:#4b5563; color:#fff; }
+  .mri-thumb { cursor:pointer; border:2px solid transparent; border-radius:4px; transition:border .15s; display:block; }
+  .mri-thumb.selected { border-color:#0891b2; }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:#111827; }
+  ::-webkit-scrollbar-thumb { background:#374151; border-radius:3px; }
+</style>
+</head>
+<body class="flex flex-col" style="min-height:100vh;background:#0a0f1a">
+
+<!-- Top Toolbar -->
+<div class="flex items-center gap-2 px-4 py-2.5 flex-shrink-0" style="background:#111827;border-bottom:1px solid #1f2937">
+  <a href="patient-profile.html" class="mri-tool-btn text-xs">&#8592; Back to Profile</a>
+  <span class="text-white font-bold text-sm ml-2">MRI Brain &middot; Ahmed Al-Rashid &middot; P-001</span>
+  <div class="flex-1"></div>
+  <div class="flex gap-1 flex-wrap">
+    <button class="mri-tool-btn" onclick="mriZoom(1.2)" title="Zoom In">&#128269;+</button>
+    <button class="mri-tool-btn" onclick="mriZoom(0.8)" title="Zoom Out">&#128269;-</button>
+    <button class="mri-tool-btn" onclick="mriAdjust('brightness',15)" title="Brightness +">&#9728;+</button>
+    <button class="mri-tool-btn" onclick="mriAdjust('brightness',-15)" title="Brightness -">&#9728;-</button>
+    <button class="mri-tool-btn" onclick="mriAdjust('contrast',15)" title="Contrast +">&#9681;+</button>
+    <button class="mri-tool-btn" onclick="mriAdjust('contrast',-15)" title="Contrast -">&#9681;-</button>
+    <button class="mri-tool-btn" onclick="mriInvert()" title="Invert">&#10548;</button>
+    <button class="mri-tool-btn" onclick="mriReset()" title="Reset">&#8635;</button>
+    <button class="mri-tool-btn" onclick="toggleFullscreen()" title="Fullscreen">&#9974;</button>
+  </div>
+</div>
+
+<!-- Main Area -->
+<div class="flex flex-1" style="min-height:0">
+  <!-- Thumbnail Strip -->
+  <div class="overflow-y-auto py-3 px-2 flex-shrink-0" style="background:#111827;width:90px;border-right:1px solid #1f2937">
+    <div id="mri-thumbs"></div>
+  </div>
+
+  <!-- Canvas -->
+  <div class="flex-1 flex items-center justify-center" style="background:#0a0f1a" id="mri-canvas-wrapper">
+    <canvas id="mri-main-canvas" width="500" height="500" style="border:1px solid #1f2937;border-radius:4px;max-width:100%;max-height:calc(100vh - 130px)"></canvas>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="overflow-y-auto p-4 space-y-4 flex-shrink-0" style="background:#111827;width:220px;border-left:1px solid #1f2937;font-size:12px">
+    <!-- Patient Info -->
+    <div>
+      <p class="font-bold text-xs mb-2 text-gray-500 uppercase tracking-widest">Patient Info</p>
+      <p class="font-semibold text-white">Ahmed Al-Rashid</p>
+      <p class="text-gray-400">ID: P-001</p>
+      <p class="text-gray-400">DOB: 15/03/1985</p>
+      <p class="text-gray-400">Sex: Male</p>
+    </div>
+    <!-- Study Info -->
+    <div>
+      <p class="font-bold text-xs mb-2 text-gray-500 uppercase tracking-widest">Study Info</p>
+      <p class="text-gray-400">Date: 16/08/2026</p>
+      <p class="text-gray-400">Modality: MRI</p>
+      <p class="text-gray-400">Body Part: Brain</p>
+      <p class="text-gray-400">Protocol: T1W+T2W</p>
+      <p class="text-gray-400">Slices: 10</p>
+      <p class="text-gray-400">Thickness: 5mm</p>
+    </div>
+    <!-- Window -->
+    <div>
+      <p class="font-bold text-xs mb-2 text-gray-500 uppercase tracking-widest">Window</p>
+      <div class="space-y-2">
+        <div>
+          <span class="text-gray-400">Brightness</span>
+          <div class="h-1.5 rounded mt-1 bg-gray-700"><div id="bright-bar" class="h-1.5 rounded bg-blue-600" style="width:50%"></div></div>
+        </div>
+        <div>
+          <span class="text-gray-400">Contrast</span>
+          <div class="h-1.5 rounded mt-1 bg-gray-700"><div id="contrast-bar" class="h-1.5 rounded bg-teal-500" style="width:50%"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Tools -->
+    <div>
+      <p class="font-bold text-xs mb-2 text-gray-500 uppercase tracking-widest">Tools</p>
+      <div class="space-y-1.5">
+        <button class="w-full text-left px-2.5 py-1.5 rounded text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition">&#128207; Measure</button>
+        <button class="w-full text-left px-2.5 py-1.5 rounded text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition">&#9998; Annotate</button>
+        <button class="w-full text-left px-2.5 py-1.5 rounded text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition">&#128424; Print</button>
+        <button class="w-full text-left px-2.5 py-1.5 rounded text-xs bg-gray-800 text-gray-300 hover:bg-gray-700 transition">&#128257; Share</button>
+      </div>
+    </div>
+    <!-- Slice info -->
+    <div>
+      <p class="font-bold text-xs mb-2 text-gray-500 uppercase tracking-widest">Current Slice</p>
+      <p id="slice-info-panel" class="text-white font-semibold">Slice 4 / 10</p>
+      <p class="text-gray-500 text-xs mt-1">T2W FLAIR</p>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Slider -->
+<div class="flex items-center gap-4 px-6 py-3 flex-shrink-0" style="background:#111827;border-top:1px solid #1f2937">
+  <span id="slice-counter" class="text-white text-sm font-semibold w-24">Slice 4 / 10</span>
+  <input type="range" id="slice-slider" min="0" max="9" value="3" class="flex-1" style="accent-color:#2563eb" oninput="goToSlice(parseInt(this.value))">
+  <span class="text-gray-500 text-xs">Scroll wheel or drag slider to navigate</span>
+</div>
+
+<script>
+// ===== STATE =====
+let currentSlice = 3;
+let mriScale = 1;
+let mriBrightness = 0;
+let mriContrast = 0;
+let mriInverted = false;
+let brightnessPct = 50;
+let contrastPct = 50;
+
+// ===== SLICE DATA =====
+const mriSlices = [
+  { outerRx:110, outerRy:125, innerRx:70, innerRy:80, grayOuter:45, grayInner:90, gyriFolds:8, extras:[{x:-30,y:-10,rx:25,ry:20,g:75},{x:30,y:-15,rx:22,ry:18,g:72}] },
+  { outerRx:120, outerRy:135, innerRx:80, innerRy:90, grayOuter:42, grayInner:88, gyriFolds:10, extras:[{x:-35,y:0,rx:28,ry:22,g:78},{x:32,y:5,rx:25,ry:20,g:74}] },
+  { outerRx:130, outerRy:140, innerRx:88, innerRy:95, grayOuter:40, grayInner:86, gyriFolds:12, extras:[{x:-40,y:5,rx:30,ry:24,g:76},{x:38,y:8,rx:28,ry:22,g:72},{x:0,y:-50,rx:20,ry:15,g:60}] },
+  { outerRx:135, outerRy:145, innerRx:92, innerRy:100, grayOuter:38, grayInner:85, gyriFolds:14, extras:[{x:-42,y:8,rx:32,ry:26,g:80},{x:40,y:10,rx:30,ry:24,g:76},{x:0,y:30,rx:18,ry:12,g:55}] },
+  { outerRx:138, outerRy:148, innerRx:95, innerRy:105, grayOuter:36, grayInner:84, gyriFolds:14, extras:[{x:-45,y:10,rx:33,ry:27,g:78},{x:42,y:12,rx:31,ry:25,g:74},{x:5,y:25,rx:22,ry:16,g:58}] },
+  { outerRx:132, outerRy:142, innerRx:88, innerRy:98, grayOuter:38, grayInner:86, gyriFolds:12, extras:[{x:-40,y:5,rx:30,ry:24,g:76},{x:38,y:8,rx:28,ry:22,g:72}] },
+  { outerRx:125, outerRy:138, innerRx:82, innerRy:92, grayOuter:40, grayInner:87, gyriFolds:10, extras:[{x:-36,y:2,rx:27,ry:21,g:77},{x:34,y:6,rx:25,ry:19,g:73}] },
+  { outerRx:115, outerRy:130, innerRx:74, innerRy:84, grayOuter:43, grayInner:89, gyriFolds:8, extras:[{x:-32,y:-5,rx:24,ry:19,g:75},{x:30,y:-2,rx:22,ry:17,g:71}] },
+  { outerRx:105, outerRy:120, innerRx:65, innerRy:75, grayOuter:46, grayInner:91, gyriFolds:6, extras:[{x:-25,y:-8,rx:20,ry:15,g:73}] },
+  { outerRx:90,  outerRy:105, innerRx:55, innerRy:62, grayOuter:50, grayInner:94, gyriFolds:4, extras:[{x:-20,y:-5,rx:16,ry:12,g:70}] },
+];
+
+function clamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+function grayStr(v) { return `rgb(${v},${v},${v})`; }
+
+function drawBrainSlice(canvas, sliceIdx, scale, brightness, contrast, inverted) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const s = mriSlices[sliceIdx % mriSlices.length];
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  const bg = clamp(8 + brightness);
+  ctx.fillStyle = grayStr(bg);
+  ctx.fillRect(0, 0, W, H);
+
+  // Noise
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (Math.random() - 0.5) * 6;
+    d[i] = clamp(d[i] + n); d[i+1] = clamp(d[i+1] + n); d[i+2] = clamp(d[i+2] + n);
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  // Skull
+  const skullG = ctx.createRadialGradient(0, -10, s.outerRx * 0.3, 0, 0, s.outerRx * 1.1);
+  skullG.addColorStop(0, grayStr(clamp(s.grayOuter + 30 + brightness)));
+  skullG.addColorStop(0.7, grayStr(clamp(s.grayOuter + brightness)));
+  skullG.addColorStop(1, grayStr(clamp(s.grayOuter - 10 + brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s.outerRx, s.outerRy, 0, 0, Math.PI * 2);
+  ctx.fillStyle = skullG;
+  ctx.fill();
+
+  // Cortex
+  const cortex = ctx.createRadialGradient(0, -15, s.innerRx * 0.4, 0, 0, s.outerRx * 0.95);
+  cortex.addColorStop(0, grayStr(clamp(s.grayInner + 20 + brightness)));
+  cortex.addColorStop(1, grayStr(clamp(s.grayInner - 5 + brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s.innerRx + 24, s.innerRy + 24, 0, 0, Math.PI * 2);
+  ctx.fillStyle = cortex;
+  ctx.fill();
+
+  // White matter
+  const wm = ctx.createRadialGradient(-10, -20, 10, 0, 0, s.innerRx * 0.85);
+  wm.addColorStop(0, grayStr(clamp(s.grayInner + 35 + brightness)));
+  wm.addColorStop(0.6, grayStr(clamp(s.grayInner + 22 + brightness)));
+  wm.addColorStop(1, grayStr(clamp(s.grayInner + 8 + brightness)));
+  ctx.beginPath();
+  ctx.ellipse(0, 0, s.innerRx, s.innerRy, 0, 0, Math.PI * 2);
+  ctx.fillStyle = wm;
+  ctx.fill();
+
+  // Gyri folds
+  for (let i = 0; i < s.gyriFolds; i++) {
+    const angle = (i / s.gyriFolds) * Math.PI * 2;
+    const fx = Math.cos(angle) * (s.outerRx - 8);
+    const fy = Math.sin(angle) * (s.outerRy - 8) * (s.outerRy / s.outerRx);
+    const gi = clamp(s.grayOuter + 15 + brightness + (Math.random() - 0.5) * 8);
+    ctx.beginPath();
+    ctx.ellipse(fx, fy, 12 + Math.random() * 6, 8 + Math.random() * 4, angle, 0, Math.PI * 2);
+    ctx.fillStyle = grayStr(gi);
+    ctx.fill();
+  }
+
+  // Extra structures
+  s.extras.forEach(e => {
+    const eg = ctx.createRadialGradient(e.x, e.y, 2, e.x, e.y, e.rx);
+    eg.addColorStop(0, grayStr(clamp(e.g + 20 + brightness)));
+    eg.addColorStop(1, grayStr(clamp(e.g - 10 + brightness)));
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y, e.rx, e.ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = eg;
+    ctx.fill();
+  });
+
+  // Lateral ventricles
+  ctx.beginPath();
+  ctx.ellipse(-18, 0, 14, 10, -0.3, 0, Math.PI * 2);
+  ctx.fillStyle = grayStr(clamp(12 + brightness));
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(18, 0, 14, 10, 0.3, 0, Math.PI * 2);
+  ctx.fillStyle = grayStr(clamp(12 + brightness));
+  ctx.fill();
+
+  // Falx cerebri
+  ctx.beginPath();
+  ctx.moveTo(0, -s.outerRy + 5);
+  ctx.lineTo(0, -s.innerRy + 10);
+  ctx.strokeStyle = grayStr(clamp(30 + brightness));
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Sulci
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * Math.PI * 2 + 0.2;
+    const x1 = Math.cos(ang) * (s.innerRx + 4), y1 = Math.sin(ang) * (s.innerRy + 4);
+    const x2 = Math.cos(ang) * (s.innerRx + 18), y2 = Math.sin(ang) * (s.innerRy + 18);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = grayStr(clamp(25 + brightness));
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Invert
+  if (inverted) {
+    const id2 = ctx.getImageData(0, 0, W, H);
+    const d2 = id2.data;
+    for (let i = 0; i < d2.length; i += 4) {
+      d2[i] = 255 - d2[i]; d2[i+1] = 255 - d2[i+1]; d2[i+2] = 255 - d2[i+2];
+    }
+    ctx.putImageData(id2, 0, 0);
+  }
+
+  // Overlay text
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '11px monospace';
+  ctx.fillText('MediScan PACS v3.2', 8, 18);
+  ctx.fillText(`S:${sliceIdx + 1} T2W`, 8, H - 10);
+  ctx.fillText('Ahmed Al-Rashid', W - 130, 18);
+  ctx.fillText('16/08/2026 09:14', W - 130, 32);
+}
+
+function drawThumb(canvas, sliceIdx) {
+  canvas.width = 70; canvas.height = 70;
+  drawBrainSlice(canvas, sliceIdx, 0.42, 0, 0, false);
+}
+
+function initThumbs() {
+  const thumbsDiv = document.getElementById('mri-thumbs');
+  for (let i = 0; i < 10; i++) {
+    const wrapper = document.createElement('div');
+    wrapper.style.marginBottom = '6px';
+    const c = document.createElement('canvas');
+    c.className = 'mri-thumb';
+    c.id = 'thumb-' + i;
+    c.title = 'Slice ' + (i + 1);
+    drawThumb(c, i);
+    c.onclick = () => goToSlice(i);
+    const lbl = document.createElement('p');
+    lbl.style.cssText = 'color:#6b7280;font-size:9px;text-align:center;margin-top:2px;';
+    lbl.textContent = 'S-' + (i + 1);
+    wrapper.appendChild(c); wrapper.appendChild(lbl);
+    thumbsDiv.appendChild(wrapper);
+  }
+}
+
+function goToSlice(idx) {
+  currentSlice = idx;
+  const mc = document.getElementById('mri-main-canvas');
+  drawBrainSlice(mc, idx, mriScale, mriBrightness, mriContrast, mriInverted);
+  document.getElementById('slice-counter').textContent = `Slice ${idx + 1} / 10`;
+  document.getElementById('slice-info-panel').textContent = `Slice ${idx + 1} / 10`;
+  document.getElementById('slice-slider').value = idx;
+  document.querySelectorAll('.mri-thumb').forEach((c, i) => c.classList.toggle('selected', i === idx));
+}
+
+function mriZoom(factor) {
+  mriScale = Math.max(0.3, Math.min(3, mriScale * factor));
+  goToSlice(currentSlice);
+}
+
+function mriAdjust(type, delta) {
+  if (type === 'brightness') {
+    mriBrightness = Math.max(-100, Math.min(100, mriBrightness + delta));
+    brightnessPct = 50 + mriBrightness / 2;
+    document.getElementById('bright-bar').style.width = clamp(brightnessPct) + '%';
+  }
+  if (type === 'contrast') {
+    mriContrast = Math.max(-100, Math.min(100, mriContrast + delta));
+    contrastPct = 50 + mriContrast / 2;
+    document.getElementById('contrast-bar').style.width = clamp(contrastPct) + '%';
+  }
+  goToSlice(currentSlice);
+}
+
+function mriInvert() {
+  mriInverted = !mriInverted;
+  goToSlice(currentSlice);
+}
+
+function mriReset() {
+  mriScale = 1; mriBrightness = 0; mriContrast = 0; mriInverted = false;
+  brightnessPct = 50; contrastPct = 50;
+  document.getElementById('bright-bar').style.width = '50%';
+  document.getElementById('contrast-bar').style.width = '50%';
+  goToSlice(currentSlice);
+}
+
+function toggleFullscreen() {
+  const wrapper = document.getElementById('mri-canvas-wrapper');
+  if (!document.fullscreenElement) wrapper.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  initThumbs();
+  goToSlice(currentSlice);
+
+  // Mouse wheel navigation
+  document.getElementById('mri-main-canvas').addEventListener('wheel', e => {
+    e.preventDefault();
+    const next = e.deltaY > 0 ? Math.min(9, currentSlice + 1) : Math.max(0, currentSlice - 1);
+    goToSlice(next);
+  }, { passive: false });
+});
+</script>
+</body>
+</html>

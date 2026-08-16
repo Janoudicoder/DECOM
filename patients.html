@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediScan — Patients</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{sidebar:'#0f172a'}}}}</script>
+</head>
+<body class="flex min-h-screen bg-gray-50">
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="w-60 flex-shrink-0 bg-slate-900 flex flex-col min-h-screen">
+  <div class="p-5 border-b border-slate-700">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div>
+        <p class="text-white font-bold text-base leading-none">MediScan</p>
+        <p class="text-slate-400 text-xs mt-0.5">Radiology Center</p>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 py-4 px-3 space-y-0.5">
+    <p class="text-xs font-semibold text-slate-500 px-3 mb-2 uppercase tracking-widest">Main Menu</p>
+    <a href="dashboard.html"       class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#127968; <span>Dashboard</span></a>
+    <a href="patients.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium">&#128101; <span>Patients</span></a>
+    <a href="appointments.html"    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128197; <span>Appointments</span></a>
+    <a href="new-examination.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128302; <span>Examinations</span></a>
+    <a href="reports.html"         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128203; <span>Reports</span></a>
+    <a href="payments.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128179; <span>Payments</span></a>
+    <a href="doctors.html"         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#128104;&#8205;&#9877;&#65039; <span>Doctors</span></a>
+    <a href="settings.html"        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white text-sm font-medium transition">&#9881;&#65039; <span>Settings</span></a>
+  </nav>
+  <div class="p-3 border-t border-slate-700 space-y-2">
+    <a href="patient-portal.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-teal-900 text-teal-300 hover:bg-teal-800 text-sm font-medium transition">&#128279; <span>Patient Portal</span></a>
+    <div class="flex items-center gap-3 px-2 py-2">
+      <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">SM</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-xs font-semibold leading-none">Dr. Sarah Miller</p>
+        <p class="text-slate-400 text-xs mt-0.5">Radiologist</p>
+      </div>
+      <a href="login.html" class="text-slate-500 hover:text-red-400 transition text-xs" title="Logout">&#10132;</a>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="flex-1 overflow-auto p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Patients</h2>
+      <p class="text-gray-500 text-sm mt-1">Manage patient records</p>
+    </div>
+    <button onclick="document.getElementById('add-patient-modal').classList.remove('hidden')"
+            class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition flex items-center gap-2">
+      &#43; Add New Patient
+    </button>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-5">
+    <!-- Search -->
+    <div class="flex gap-3 mb-5">
+      <div class="relative flex-1">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">&#128269;</span>
+        <input type="text" id="search-input" placeholder="Search patients by name, ID, phone..."
+               class="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition"
+               oninput="filterPatients(this.value)">
+      </div>
+      <select class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 w-36">
+        <option>All Gender</option>
+        <option>Male</option>
+        <option>Female</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b-2 border-gray-100">
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Patient ID</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Full Name</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Phone</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">DOB</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Gender</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Referring Doctor</th>
+            <th class="text-left py-3 px-3 text-xs font-bold text-gray-400 uppercase tracking-wide">Action</th>
+          </tr>
+        </thead>
+        <tbody id="patients-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ===== ADD PATIENT MODAL ===== -->
+<div id="add-patient-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-screen overflow-y-auto">
+    <div class="flex items-center justify-between p-6 border-b">
+      <h3 class="text-lg font-bold text-gray-800">&#43; Add New Patient</h3>
+      <button onclick="document.getElementById('add-patient-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name *</label>
+        <input type="text" placeholder="John Doe" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Phone *</label>
+        <input type="text" placeholder="+971 50 000 0000" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Date of Birth *</label>
+        <input type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Gender</label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+          <option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+        <input type="email" placeholder="patient@email.com" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Referring Doctor</label>
+        <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+          <option>Dr. Sarah Miller</option><option>Dr. James Wilson</option><option>Dr. Aisha Patel</option><option>Dr. Robert Chen</option>
+        </select>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Medical Notes</label>
+        <textarea rows="3" placeholder="Relevant medical history, allergies, conditions..." class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500 resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-6 pb-6 flex gap-3">
+      <button onclick="savePatient()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">Save Patient</button>
+      <button onclick="document.getElementById('add-patient-modal').classList.add('hidden')" class="border border-blue-600 text-blue-600 text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-50 transition">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-sm px-5 py-3.5 rounded-xl shadow-2xl translate-y-20 opacity-0 transition-all duration-300 z-50">
+  &#9989; Patient saved successfully!
+</div>
+
+<script>
+const patients = [
+  {id:'P-001',name:'Ahmed Al-Rashid',   phone:'+971-50-123-4567',dob:'15/03/1985',gender:'Male',   doctor:'Dr. Sarah Miller'},
+  {id:'P-002',name:'Sara Johnson',       phone:'+1-555-234-5678', dob:'22/07/1990',gender:'Female', doctor:'Dr. James Wilson'},
+  {id:'P-003',name:'Mohammed Al-Farsi', phone:'+971-55-345-6789',dob:'08/11/1978',gender:'Male',   doctor:'Dr. Aisha Patel'},
+  {id:'P-004',name:'Emily Chen',         phone:'+1-555-456-7890', dob:'14/02/1995',gender:'Female', doctor:'Dr. Robert Chen'},
+  {id:'P-005',name:'Khalid Al-Mansouri',phone:'+971-50-567-8901',dob:'30/09/1982',gender:'Male',   doctor:'Dr. Sarah Miller'},
+  {id:'P-006',name:'Laura Martinez',     phone:'+1-555-678-9012', dob:'18/05/1988',gender:'Female', doctor:'Dr. James Wilson'},
+  {id:'P-007',name:'Omar Hassan',        phone:'+971-55-789-0123',dob:'25/12/1975',gender:'Male',   doctor:'Dr. Aisha Patel'},
+  {id:'P-008',name:'Fatima Al-Zahra',   phone:'+971-50-890-1234',dob:'07/08/1992',gender:'Female', doctor:'Dr. Robert Chen'},
+  {id:'P-009',name:'David Thompson',     phone:'+1-555-901-2345', dob:'11/04/1968',gender:'Male',   doctor:'Dr. Sarah Miller'},
+  {id:'P-010',name:'Noor Al-Said',       phone:'+971-55-012-3456',dob:'29/01/1998',gender:'Female', doctor:'Dr. James Wilson'},
+];
+
+function renderPatients(list) {
+  const tbody = document.getElementById('patients-tbody');
+  tbody.innerHTML = list.map(p => `
+    <tr class="border-b border-gray-50 hover:bg-gray-50">
+      <td class="py-3 px-3"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">${p.id}</span></td>
+      <td class="py-3 px-3 font-semibold text-gray-800 text-sm">${p.name}</td>
+      <td class="py-3 px-3 text-sm text-gray-600">${p.phone}</td>
+      <td class="py-3 px-3 text-sm text-gray-600">${p.dob}</td>
+      <td class="py-3 px-3 text-sm text-gray-600">${p.gender}</td>
+      <td class="py-3 px-3 text-sm text-gray-600">${p.doctor}</td>
+      <td class="py-3 px-3">
+        <a href="patient-profile.html" class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+          &#128065; View Profile
+        </a>
+      </td>
+    </tr>`).join('');
+}
+
+function filterPatients(q) {
+  const filtered = patients.filter(p =>
+    p.name.toLowerCase().includes(q.toLowerCase()) ||
+    p.id.toLowerCase().includes(q.toLowerCase()) ||
+    p.phone.includes(q)
+  );
+  renderPatients(filtered);
+}
+
+function savePatient() {
+  document.getElementById('add-patient-modal').classList.add('hidden');
+  const t = document.getElementById('toast');
+  t.classList.remove('translate-y-20','opacity-0');
+  setTimeout(() => t.classList.add('translate-y-20','opacity-0'), 3000);
+}
+
+// Close modal on backdrop click
+document.getElementById('add-patient-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.add('hidden');
+});
+
+renderPatients(patients);
+</script>
+</body>
+</html>
